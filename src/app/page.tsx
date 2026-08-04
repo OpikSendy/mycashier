@@ -8,19 +8,25 @@ import UserPwaApp from '@/features/user-pwa/UserPwaApp';
 import AiChatWidget from '@/features/ai-assistant/AiChatWidget';
 
 export default function Home() {
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
 
   useEffect(() => {
-    setMounted(true);
-    const hasSeen = localStorage.getItem('mycashier_onboarding_seen');
-    if (!hasSeen) {
-      setShowOnboarding(true);
+    try {
+      const hasSeen = localStorage.getItem('mycashier_onboarding_seen');
+      if (!hasSeen) {
+        setShowOnboarding(true);
+      } else {
+        setShowOnboarding(false);
+      }
+    } catch (e) {
+      setShowOnboarding(false);
     }
   }, []);
 
   const handleFinishOnboarding = () => {
-    localStorage.setItem('mycashier_onboarding_seen', 'true');
+    try {
+      localStorage.setItem('mycashier_onboarding_seen', 'true');
+    } catch (e) {}
     setShowOnboarding(false);
   };
 
@@ -28,9 +34,7 @@ export default function Home() {
     setShowOnboarding(true);
   };
 
-  if (!mounted) return null;
-
-  if (showOnboarding) {
+  if (showOnboarding === true) {
     return <OnboardingView onComplete={handleFinishOnboarding} />;
   }
 
