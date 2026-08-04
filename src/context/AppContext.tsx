@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { MenuItem, Order, INITIAL_MENU, INITIAL_ORDERS, OrderStatus, PaymentMethod } from '@/data/initialData';
 
-export type AppView = 'customer' | 'cashier' | 'kitchen' | 'manager';
+export type UserRole = 'user_pwa' | 'cashier_pos' | 'admin_cms';
 export type Theme = 'dark' | 'light';
 export type Language = 'ID' | 'EN';
 
@@ -14,8 +14,8 @@ export interface CartItem {
 }
 
 interface AppContextType {
-  activeView: AppView;
-  setActiveView: (view: AppView) => void;
+  activeRole: UserRole;
+  setActiveRole: (role: UserRole) => void;
   theme: Theme;
   toggleTheme: () => void;
   language: Language;
@@ -29,6 +29,7 @@ interface AppContextType {
   menu: MenuItem[];
   toggleProductAvailability: (productId: string) => void;
   addNewMenuItem: (newItem: Omit<MenuItem, 'id'>) => void;
+  deleteMenuItem: (productId: string) => void;
   orders: Order[];
   createOrder: (customerName: string, paymentMethod?: PaymentMethod, isDirectPaid?: boolean) => Order;
   updateOrderStatus: (orderId: string, status: OrderStatus) => void;
@@ -38,7 +39,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [activeView, setActiveViewState] = useState<AppView>('customer');
+  const [activeRole, setActiveRoleState] = useState<UserRole>('user_pwa');
   const [theme, setTheme] = useState<Theme>('dark');
   const [language, setLanguageState] = useState<Language>('ID');
   const [selectedTable, setSelectedTable] = useState<string>('Meja 04');
@@ -49,8 +50,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setMounted(true);
+    const savedRole = localStorage.getItem('mycashier_role') as UserRole;
     const savedTheme = localStorage.getItem('mycashier_theme') as Theme;
     const savedLang = localStorage.getItem('mycashier_lang') as Language;
+    if (savedRole) setActiveRoleState(savedRole);
     if (savedTheme) setTheme(savedTheme);
     if (savedLang) setLanguageState(savedLang);
   }, []);
@@ -68,15 +71,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('mycashier_theme', theme);
   }, [theme, mounted]);
 
-  const setActiveView = (view: AppView) => {
+  const setActiveRole = (role: UserRole) => {
     if (typeof document !== 'undefined' && 'startViewTransition' in document) {
       // @ts-ignore
       document.startViewTransition(() => {
-        setActiveViewState(view);
+        setActiveRoleState(role);
       });
     } else {
-      setActiveViewState(view);
+      setActiveRoleState(role);
     }
+    localStorage.setItem('mycashier_role', role);
   };
 
   const toggleTheme = () => {
@@ -138,6 +142,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setMenu((prev) => [{ id, ...newItem }, ...prev]);
   };
 
+  const deleteMenuItem = (productId: string) => {
+    setMenu((prev) => prev.filter((item) => item.id !== productId));
+  };
+
   const createOrder = (
     customerName: string,
     paymentMethod: PaymentMethod = 'CASH',
@@ -196,8 +204,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   return (
     <AppContext.Provider
       value={{
-        activeView,
-        setActiveView,
+        activeRole,
+        setActiveRole,
         theme,
         toggleTheme,
         language,
@@ -211,6 +219,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         menu,
         toggleProductAvailability,
         addNewMenuItem,
+        deleteMenuItem,
         orders,
         createOrder,
         updateOrderStatus,

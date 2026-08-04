@@ -1,30 +1,27 @@
 'use client';
 
 import React from 'react';
-import { useApp, AppView } from '@/context/AppContext';
-import { TRANSLATIONS } from '@/data/translations';
-import { ShoppingBag, Monitor, UtensilsCrossed, BarChart3, Sun, Moon, Globe, QrCode } from 'lucide-react';
+import { useApp, UserRole } from '@/context/AppContext';
+import { Smartphone, Monitor, ShieldCheck, Sun, Moon, Globe, QrCode } from 'lucide-react';
 
 export default function Navbar() {
-  const { activeView, setActiveView, theme, toggleTheme, language, toggleLanguage, selectedTable, setSelectedTable } = useApp();
-  const t = TRANSLATIONS[language].nav;
+  const { activeRole, setActiveRole, theme, toggleTheme, language, toggleLanguage, selectedTable, setSelectedTable } = useApp();
 
   const tables = Array.from({ length: 12 }, (_, i) => `Meja ${String(i + 1).padStart(2, '0')}`);
 
-  const navItems: { id: AppView; label: string; icon: React.ReactNode }[] = [
-    { id: 'customer', label: t.customer, icon: <ShoppingBag className="w-4 h-4" /> },
-    { id: 'cashier', label: t.cashier, icon: <Monitor className="w-4 h-4" /> },
-    { id: 'kitchen', label: t.kitchen, icon: <UtensilsCrossed className="w-4 h-4" /> },
-    { id: 'manager', label: t.manager, icon: <BarChart3 className="w-4 h-4" /> },
+  const roles: { id: UserRole; label: string; sub: string; icon: React.ReactNode }[] = [
+    { id: 'user_pwa', label: 'User Mobile PWA', sub: 'Ordering & Pay', icon: <Smartphone className="w-4 h-4" /> },
+    { id: 'cashier_pos', label: 'Kasir POS Station', sub: 'Checkout & Struk', icon: <Monitor className="w-4 h-4" /> },
+    { id: 'admin_cms', label: 'Admin CMS Master', sub: 'Master Data & Stock', icon: <ShieldCheck className="w-4 h-4" /> },
   ];
 
   return (
-    <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 select-none">
+    <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 select-none shadow-sm">
       <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
         {/* Brand & Logo */}
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 p-0.5 shadow-md shadow-emerald-500/20 flex items-center justify-center text-slate-950 font-extrabold text-sm">
-            <span className="bg-slate-950 text-emerald-400 w-full h-full rounded-[10px] flex items-center justify-center">
+            <span className="bg-slate-950 text-emerald-400 w-full h-full rounded-[10px] flex items-center justify-center font-black">
               MC
             </span>
           </div>
@@ -33,36 +30,38 @@ export default function Navbar() {
               My<span className="text-emerald-500 dark:text-emerald-400">Cashier</span>
             </h1>
             <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold tracking-wide">
-              POS & TABLE SELF-ORDERING
+              ROLE BASED MULTI-APP SYSTEM
             </p>
           </div>
         </div>
 
-        {/* View Switcher Tabs */}
-        <nav className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-          {navItems.map((item) => {
-            const isActive = activeView === item.id;
+        {/* Role Switcher Tabs */}
+        <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+          {roles.map((role) => {
+            const isActive = activeRole === role.id;
             return (
               <button
-                key={item.id}
-                onClick={() => setActiveView(item.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
+                key={role.id}
+                onClick={() => setActiveRole(role.id)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
                   isActive
-                    ? 'bg-emerald-500 text-slate-950 shadow-sm shadow-emerald-500/30'
+                    ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 scale-105'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800/60'
                 }`}
               >
-                {item.icon}
-                <span className="hidden sm:inline">{item.label}</span>
+                {role.icon}
+                <div className="text-left hidden sm:block">
+                  <div className="leading-tight">{role.label}</div>
+                </div>
               </button>
             );
           })}
-        </nav>
+        </div>
 
         {/* Right Utility Controls */}
         <div className="flex items-center gap-2">
-          {/* Table Selector (Visible in Customer View) */}
-          {activeView === 'customer' && (
+          {/* Table Selector (Visible in User PWA View) */}
+          {activeRole === 'user_pwa' && (
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-bold">
               <QrCode className="w-3.5 h-3.5" />
               <select

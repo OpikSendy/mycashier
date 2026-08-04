@@ -4,15 +4,14 @@ import React, { useState, useEffect } from 'react';
 import Navbar from '@/features/navbar/Navbar';
 import BottomNav from '@/features/navbar/BottomNav';
 import OnboardingView from '@/features/onboarding/OnboardingView';
-import CustomerView from '@/features/customer/CustomerView';
-import CashierView from '@/features/cashier/CashierView';
-import KitchenView from '@/features/kitchen/KitchenView';
-import ManagerView from '@/features/manager/ManagerView';
+import UserPwaApp from '@/features/user-pwa/UserPwaApp';
+import CashierPosApp from '@/features/cashier-pos/CashierPosApp';
+import AdminCmsApp from '@/features/admin-cms/AdminCmsApp';
 import AiChatWidget from '@/features/ai-assistant/AiChatWidget';
 import { useApp } from '@/context/AppContext';
 
 export default function Home() {
-  const { activeView } = useApp();
+  const { activeRole } = useApp();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -35,26 +34,31 @@ export default function Home() {
 
   if (!mounted) return null;
 
-  if (showOnboarding) {
+  if (showOnboarding && activeRole === 'user_pwa') {
     return <OnboardingView onComplete={handleFinishOnboarding} />;
   }
 
   return (
     <main className="min-h-screen relative selection:bg-emerald-500 selection:text-slate-950 pb-16">
-      {/* Navigation Header */}
+      {/* Navigation Header with Role Switcher */}
       <Navbar />
 
-      {/* Dynamic Module Views */}
-      {activeView === 'customer' && <CustomerView />}
-      {activeView === 'cashier' && <CashierView />}
-      {activeView === 'kitchen' && <KitchenView />}
-      {activeView === 'manager' && <ManagerView />}
+      {/* Role 1: Customer Mobile PWA */}
+      {activeRole === 'user_pwa' && <UserPwaApp />}
 
-      {/* Floating Ask MyCashier AI Assistant */}
+      {/* Role 2: Dedicated Cashier Web POS Station */}
+      {activeRole === 'cashier_pos' && <CashierPosApp />}
+
+      {/* Role 3: Admin CMS Master Control */}
+      {activeRole === 'admin_cms' && <AdminCmsApp />}
+
+      {/* Ask MyCashier AI Assistant */}
       <AiChatWidget />
 
-      {/* PWA Mobile Bottom Navigation Bar */}
-      <BottomNav onRestartOnboarding={handleRestartOnboarding} />
+      {/* PWA Mobile Bottom Navigation Bar (Rendered for User PWA mode) */}
+      {activeRole === 'user_pwa' && (
+        <BottomNav onRestartOnboarding={handleRestartOnboarding} />
+      )}
     </main>
   );
 }
