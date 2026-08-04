@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { useApp, UserRole } from '@/context/AppContext';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { ShoppingBag, Monitor, ShieldCheck, HelpCircle } from 'lucide-react';
 
 interface BottomNavProps {
@@ -9,22 +10,22 @@ interface BottomNavProps {
 }
 
 export default function BottomNav({ onRestartOnboarding }: BottomNavProps) {
-  const { activeRole, setActiveRole } = useApp();
+  const pathname = usePathname();
 
-  const items: { id: UserRole; label: string; icon: React.ReactNode }[] = [
-    { id: 'user_pwa', label: 'User PWA', icon: <ShoppingBag className="w-5 h-5" /> },
-    { id: 'cashier_pos', label: 'Kasir POS', icon: <Monitor className="w-5 h-5" /> },
-    { id: 'admin_cms', label: 'Admin CMS', icon: <ShieldCheck className="w-5 h-5" /> },
+  const items = [
+    { href: '/', label: 'User PWA', path: '/', icon: <ShoppingBag className="w-5 h-5" /> },
+    { href: '/cashier', label: 'Kasir POS', path: '/cashier', icon: <Monitor className="w-5 h-5" /> },
+    { href: '/admin', label: 'Admin CMS', path: '/admin', icon: <ShieldCheck className="w-5 h-5" /> },
   ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800 py-2 px-3 flex items-center justify-around select-none shadow-2xl">
       {items.map((item) => {
-        const isActive = activeRole === item.id;
+        const isActive = pathname === item.path;
         return (
-          <button
-            key={item.id}
-            onClick={() => setActiveRole(item.id)}
+          <Link
+            key={item.href}
+            href={item.href}
             className={`flex flex-col items-center gap-1 transition-all px-3 py-1 rounded-xl ${
               isActive
                 ? 'text-emerald-500 font-bold scale-105'
@@ -35,7 +36,7 @@ export default function BottomNav({ onRestartOnboarding }: BottomNavProps) {
               {item.icon}
             </div>
             <span className="text-[10px] font-semibold">{item.label}</span>
-          </button>
+          </Link>
         );
       })}
 

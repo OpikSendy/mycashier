@@ -1,25 +1,28 @@
 'use client';
 
 import React from 'react';
-import { useApp, UserRole } from '@/context/AppContext';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useApp } from '@/context/AppContext';
 import { Smartphone, Monitor, ShieldCheck, Sun, Moon, Globe, QrCode } from 'lucide-react';
 
 export default function Navbar() {
-  const { activeRole, setActiveRole, theme, toggleTheme, language, toggleLanguage, selectedTable, setSelectedTable } = useApp();
+  const pathname = usePathname();
+  const { theme, toggleTheme, language, toggleLanguage, selectedTable, setSelectedTable } = useApp();
 
   const tables = Array.from({ length: 12 }, (_, i) => `Meja ${String(i + 1).padStart(2, '0')}`);
 
-  const roles: { id: UserRole; label: string; sub: string; icon: React.ReactNode }[] = [
-    { id: 'user_pwa', label: 'User Mobile PWA', sub: 'Ordering & Pay', icon: <Smartphone className="w-4 h-4" /> },
-    { id: 'cashier_pos', label: 'Kasir POS Station', sub: 'Checkout & Struk', icon: <Monitor className="w-4 h-4" /> },
-    { id: 'admin_cms', label: 'Admin CMS Master', sub: 'Master Data & Stock', icon: <ShieldCheck className="w-4 h-4" /> },
+  const navLinks = [
+    { href: '/', label: 'User Mobile PWA', path: '/', icon: <Smartphone className="w-4 h-4" /> },
+    { href: '/cashier', label: 'Kasir POS Station', path: '/cashier', icon: <Monitor className="w-4 h-4" /> },
+    { href: '/admin', label: 'Admin CMS Master', path: '/admin', icon: <ShieldCheck className="w-4 h-4" /> },
   ];
 
   return (
     <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 select-none shadow-sm">
       <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
         {/* Brand & Logo */}
-        <div className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 p-0.5 shadow-md shadow-emerald-500/20 flex items-center justify-center text-slate-950 font-extrabold text-sm">
             <span className="bg-slate-950 text-emerald-400 w-full h-full rounded-[10px] flex items-center justify-center font-black">
               MC
@@ -30,38 +33,36 @@ export default function Navbar() {
               My<span className="text-emerald-500 dark:text-emerald-400">Cashier</span>
             </h1>
             <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold tracking-wide">
-              ROLE BASED MULTI-APP SYSTEM
+              MULTI-ROUTE F&B PLATFORM
             </p>
           </div>
-        </div>
+        </Link>
 
-        {/* Role Switcher Tabs */}
+        {/* Real Next.js Route Navigation Links */}
         <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-          {roles.map((role) => {
-            const isActive = activeRole === role.id;
+          {navLinks.map((link) => {
+            const isActive = pathname === link.path;
             return (
-              <button
-                key={role.id}
-                onClick={() => setActiveRole(role.id)}
+              <Link
+                key={link.href}
+                href={link.href}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
                   isActive
                     ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 scale-105'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800/60'
                 }`}
               >
-                {role.icon}
-                <div className="text-left hidden sm:block">
-                  <div className="leading-tight">{role.label}</div>
-                </div>
-              </button>
+                {link.icon}
+                <span className="hidden sm:inline">{link.label}</span>
+              </Link>
             );
           })}
         </div>
 
         {/* Right Utility Controls */}
         <div className="flex items-center gap-2">
-          {/* Table Selector (Visible in User PWA View) */}
-          {activeRole === 'user_pwa' && (
+          {/* Table Selector (Visible in User PWA Route '/') */}
+          {pathname === '/' && (
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-bold">
               <QrCode className="w-3.5 h-3.5" />
               <select
