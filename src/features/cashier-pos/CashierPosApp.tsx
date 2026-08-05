@@ -33,6 +33,7 @@ export default function CashierPosApp() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<'all' | 'food' | 'drinks' | 'snack' | 'dessert'>('all');
+  const [activeSubCategory, setActiveSubCategory] = useState<string>('all');
   const [selectedOrderForPayment, setSelectedOrderForPayment] = useState<Order | null>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>('CASH');
   const [cashAmountPaid, setCashAmountPaid] = useState<string>('');
@@ -41,12 +42,22 @@ export default function CashierPosApp() {
 
   const unpaidOrders = orders.filter((o) => o.paymentStatus === 'UNPAID');
 
+  const availableSubCategories = Array.from(
+    new Set(
+      menu
+        .filter((i) => activeCategory === 'all' || i.category === activeCategory)
+        .map((i) => i.subCategory)
+        .filter((s): s is string => Boolean(s))
+    )
+  );
+
   const filteredMenu = menu.filter((item) => {
     const matchesSearch =
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (item.nameEn && item.nameEn.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesCat = activeCategory === 'all' || item.category === activeCategory;
-    return matchesSearch && matchesCat;
+    const matchesSubCat = activeSubCategory === 'all' || item.subCategory === activeSubCategory;
+    return matchesSearch && matchesCat && matchesSubCat;
   });
 
   const cartSubtotal = cart.reduce((sum, c) => sum + c.item.price * c.quantity, 0);
@@ -128,7 +139,10 @@ export default function CashierPosApp() {
                 return (
                   <button
                     key={cat.id}
-                    onClick={() => setActiveCategory(cat.id as any)}
+                    onClick={() => {
+                      setActiveCategory(cat.id as any);
+                      setActiveSubCategory('all');
+                    }}
                     className={`px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
                       isActive
                         ? 'bg-slate-900 text-white dark:bg-emerald-500 dark:text-slate-950 shadow-xs'
@@ -141,6 +155,35 @@ export default function CashierPosApp() {
                 );
               })}
             </div>
+
+            {/* Sub-Category Filter Chips Bar */}
+            {availableSubCategories.length > 0 && (
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar w-full select-none pt-0.5">
+                <button
+                  onClick={() => setActiveSubCategory('all')}
+                  className={`px-2.5 py-1 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all cursor-pointer ${
+                    activeSubCategory === 'all'
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
+                  }`}
+                >
+                  {language === 'ID' ? 'Semua Sub-Kategori' : 'All Sub-Categories'}
+                </button>
+                {availableSubCategories.map((sub) => (
+                  <button
+                    key={sub}
+                    onClick={() => setActiveSubCategory(sub)}
+                    className={`px-2.5 py-1 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all cursor-pointer ${
+                      activeSubCategory === sub
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shadow-2xs'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    {sub}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Clean Menu Grid */}

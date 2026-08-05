@@ -3,6 +3,7 @@ export interface MenuItem {
   name: string;
   nameEn?: string;
   category: 'food' | 'drinks' | 'dessert' | 'snack';
+  subCategory?: string;
   variantPreset?: 'drinks' | 'food' | 'snack' | 'dessert' | 'none';
   price: number;
   description: string;
@@ -42,6 +43,7 @@ export const INITIAL_MENU: MenuItem[] = [
     name: 'Kopi Susu Gula Aren Premium',
     nameEn: 'Premium Aren Palm Sugar Milk Coffee',
     category: 'drinks',
+    subCategory: 'Coffee',
     variantPreset: 'drinks',
     price: 22000,
     description: 'Espresso ganda diseduh dengan susu segar murni dan gula aren organik khas Nusantara.',
@@ -55,6 +57,7 @@ export const INITIAL_MENU: MenuItem[] = [
     name: 'Nasi Goreng Wagyu Special',
     nameEn: 'Special Wagyu Beef Fried Rice',
     category: 'food',
+    subCategory: 'Rice Bowl & Nasi',
     variantPreset: 'food',
     price: 45000,
     description: 'Nasi goreng bumbu rempah spesial dipadu dengan potongan daging Wagyu lembut dan telur mata sapi.',
@@ -68,6 +71,7 @@ export const INITIAL_MENU: MenuItem[] = [
     name: 'Matcha Cream Latté',
     nameEn: 'Uji Matcha Cream Latte',
     category: 'drinks',
+    subCategory: 'Non-Coffee',
     variantPreset: 'drinks',
     price: 28000,
     description: 'Matcha Uji Jepang kelas tinggi dipadu susu oat gurih dan foam krim lembut.',
@@ -80,6 +84,7 @@ export const INITIAL_MENU: MenuItem[] = [
     name: 'Beef Teriyaki Rice Bowl',
     nameEn: 'Imported Beef Teriyaki Rice Bowl',
     category: 'food',
+    subCategory: 'Rice Bowl & Nasi',
     variantPreset: 'food',
     price: 38000,
     description: 'Irisan daging sapi impor ditumis dengan saus Teriyaki otentik di atas nasi hangat pulen.',
@@ -93,6 +98,7 @@ export const INITIAL_MENU: MenuItem[] = [
     name: 'Croissant Butter Truffle',
     nameEn: 'Truffle Butter French Croissant',
     category: 'snack',
+    subCategory: 'Pastry & Bakery',
     variantPreset: 'snack',
     price: 25000,
     description: 'Pastry khas Prancis berlapis mentega panggang renyah di luar, lembut berlapis di dalam.',
@@ -105,6 +111,7 @@ export const INITIAL_MENU: MenuItem[] = [
     name: 'Biscoff Lotus Cheese Cake',
     nameEn: 'Lotus Biscoff Baked Cheesecake',
     category: 'dessert',
+    subCategory: 'Cakes & Sweets',
     variantPreset: 'dessert',
     price: 32000,
     description: 'Kue keju panggang lezat ditaburi remahan biskuit Lotus Biscoff dan lelehan caramel.',
@@ -118,6 +125,7 @@ export const INITIAL_MENU: MenuItem[] = [
     name: 'Iced Lemon Tea Sparkle',
     nameEn: 'Sparkling Iced Lemon Tea',
     category: 'drinks',
+    subCategory: 'Tea & Sparkle',
     variantPreset: 'drinks',
     price: 18000,
     description: 'Teh lemon segar disajikan dingin dengan es dan sentuhan soda menyegarkan.',
@@ -130,6 +138,7 @@ export const INITIAL_MENU: MenuItem[] = [
     name: 'French Fries Truffle Oil',
     nameEn: 'Truffle Oil & Parmesan French Fries',
     category: 'snack',
+    subCategory: 'Finger Food',
     variantPreset: 'snack',
     price: 24000,
     description: 'Kentang goreng renyah ditaburi garam laut, keju parmesan, dan aroma truffle.',

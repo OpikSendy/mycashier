@@ -45,6 +45,7 @@ export default function UserPwaApp() {
 
   const [activeTab, setActiveTab] = useState<'menu' | 'cart' | 'status'>('menu');
   const [activeCategory, setActiveCategory] = useState<'all' | 'food' | 'drinks' | 'snack' | 'dessert'>('all');
+  const [activeSubCategory, setActiveSubCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [selectedItemForNotes, setSelectedItemForNotes] = useState<MenuItem | null>(null);
@@ -99,12 +100,24 @@ export default function UserPwaApp() {
 
   const tables = Array.from({ length: 12 }, (_, i) => `Meja ${String(i + 1).padStart(2, '0')}`);
 
-  // Filtering Menu
+  // Extract available subCategories for activeCategory
+  const availableSubCategories = Array.from(
+    new Set(
+      menu
+        .filter((i) => activeCategory === 'all' || i.category === activeCategory)
+        .map((i) => i.subCategory)
+        .filter((s): s is string => Boolean(s))
+    )
+  );
+
+  // Filtering Menu by Search, Main Category & Sub Category
   const searchFilteredMenu = menu.filter((item) => {
     const matchesSearch =
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.nameEn && item.nameEn.toLowerCase().includes(searchQuery.toLowerCase())) ||
       item.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch;
+    const matchesSubCat = activeSubCategory === 'all' || item.subCategory === activeSubCategory;
+    return matchesSearch && matchesSubCat;
   });
 
   const popularMenu = searchFilteredMenu.filter((i) => i.isPopular);
@@ -298,7 +311,10 @@ export default function UserPwaApp() {
               return (
                 <button
                   key={cat.id}
-                  onClick={() => setActiveCategory(cat.id as any)}
+                  onClick={() => {
+                    setActiveCategory(cat.id as any);
+                    setActiveSubCategory('all');
+                  }}
                   className={`flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all ${
                     isActive
                       ? 'bg-slate-900 text-white dark:bg-emerald-500 dark:text-slate-950 shadow-sm scale-105'
@@ -311,6 +327,35 @@ export default function UserPwaApp() {
               );
             })}
           </div>
+
+          {/* Sub-Category Filter Chips Bar */}
+          {availableSubCategories.length > 0 && (
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar w-full select-none pt-0.5">
+              <button
+                onClick={() => setActiveSubCategory('all')}
+                className={`px-3 py-1 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all cursor-pointer ${
+                  activeSubCategory === 'all'
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
+                }`}
+              >
+                {language === 'ID' ? 'Semua Sub-Kategori' : 'All Sub-Categories'}
+              </button>
+              {availableSubCategories.map((sub) => (
+                <button
+                  key={sub}
+                  onClick={() => setActiveSubCategory(sub)}
+                  className={`px-3 py-1 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all cursor-pointer ${
+                    activeSubCategory === sub
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shadow-2xs'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-200'
+                  }`}
+                >
+                  {sub}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* CATEGORY SECTION 1: TOP PICKS / REKOMENDASI */}
           {(activeCategory === 'all' || activeCategory === 'food') && popularMenu.length > 0 && !searchQuery && (
@@ -1042,8 +1087,15 @@ function MenuItemCard({ item, quantity, language, onAdd, onUpdateQuantity }: Men
           <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 mt-0.5 leading-relaxed">
             {item.description}
           </p>
-          <div className="text-emerald-600 dark:text-emerald-400 text-xs font-black mt-1">
-            Rp {item.price.toLocaleString('id-ID')}
+          <div className="flex items-center justify-between gap-2 mt-1">
+            <div className="text-emerald-600 dark:text-emerald-400 text-xs font-black">
+              Rp {item.price.toLocaleString('id-ID')}
+            </div>
+            {item.subCategory && (
+              <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/80 dark:border-slate-700">
+                {item.subCategory}
+              </span>
+            )}
           </div>
         </div>
       </div>

@@ -32,6 +32,7 @@ export default function AdminCmsApp() {
   const [name, setName] = useState('');
   const [nameEn, setNameEn] = useState('');
   const [category, setCategory] = useState<'food' | 'drinks' | 'dessert' | 'snack'>('food');
+  const [subCategory, setSubCategory] = useState('');
   const [variantPreset, setVariantPreset] = useState<'drinks' | 'food' | 'snack' | 'dessert' | 'none'>('food');
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
@@ -51,6 +52,7 @@ export default function AdminCmsApp() {
       name,
       nameEn: nameEn || name,
       category,
+      subCategory: subCategory || undefined,
       variantPreset,
       price: Number(price),
       description: description || 'Menu berkualitas pilihan restoran.',
@@ -63,6 +65,7 @@ export default function AdminCmsApp() {
     setIsAddModalOpen(false);
     setName('');
     setNameEn('');
+    setSubCategory('');
     setPrice('');
     setDescription('');
     setDescriptionEn('');
@@ -190,10 +193,15 @@ export default function AdminCmsApp() {
                   <div className="text-emerald-600 dark:text-emerald-400 text-xs font-black mt-0.5">
                     Rp {item.price.toLocaleString('id-ID')}
                   </div>
-                  <div className="flex items-center gap-1 mt-1">
+                  <div className="flex flex-wrap items-center gap-1 mt-1">
                     <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
                       {item.category}
                     </span>
+                    {item.subCategory && (
+                      <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                        {item.subCategory}
+                      </span>
+                    )}
                     {item.variantPreset && item.variantPreset !== 'none' && (
                       <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
                         +{item.variantPreset}
@@ -344,13 +352,36 @@ export default function AdminCmsApp() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kategori</label>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kategori Utama</label>
               <select value={category} onChange={(e) => setCategory(e.target.value as any)} className="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs focus:outline-none focus:border-emerald-500">
                 <option value="food">Makanan</option>
                 <option value="drinks">Minuman</option>
                 <option value="snack">Snack</option>
                 <option value="dessert">Dessert</option>
               </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Sub-Kategori (Spesifik)</label>
+              <input
+                type="text"
+                value={subCategory}
+                onChange={(e) => setSubCategory(e.target.value)}
+                placeholder="Contoh: Coffee, Rice Bowl, Pastry..."
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs focus:outline-none focus:border-emerald-500 mb-1.5"
+              />
+              <div className="flex flex-wrap gap-1">
+                {['Coffee', 'Non-Coffee', 'Rice Bowl & Nasi', 'Pastry & Bakery', 'Cakes & Sweets', 'Tea & Sparkle', 'Finger Food'].map((sc) => (
+                  <button
+                    key={sc}
+                    type="button"
+                    onClick={() => setSubCategory(sc)}
+                    className="px-2 py-0.5 rounded-lg bg-slate-200 dark:bg-slate-700 text-[10px] font-bold text-slate-700 dark:text-slate-300 hover:bg-emerald-500 hover:text-white transition-colors cursor-pointer"
+                  >
+                    +{sc}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div>
