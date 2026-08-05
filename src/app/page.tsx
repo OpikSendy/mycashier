@@ -101,20 +101,9 @@ export default function Home() {
       {/* Customer Mobile PWA Application */}
       <UserPwaApp />
 
-      {/* Secret Staff Login Footer Link */}
-      <footer className="text-center py-6 text-[10px] text-slate-600 border-t border-slate-900 mt-8">
-        <p className="mb-1">MyCashier F&B Self-Ordering System</p>
-        <div className="flex justify-center items-center gap-3">
-          <Link href="/cashier" className="hover:text-emerald-400 flex items-center gap-1">
-            <Lock className="w-3 h-3" />
-            <span>Stasiun Kasir POS</span>
-          </Link>
-          <span>•</span>
-          <Link href="/admin" className="hover:text-emerald-400 flex items-center gap-1">
-            <Lock className="w-3 h-3" />
-            <span>Admin Resto CMS</span>
-          </Link>
-        </div>
+      {/* Native App Bottom Spacer */}
+      <footer className="text-center py-6 text-[11px] font-bold text-slate-400">
+        <p>Powered by MyCashier PWA</p>
       </footer>
 
       {/* Ask MyCashier AI Assistant */}
