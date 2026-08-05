@@ -145,6 +145,27 @@ export default function AiChatWidget() {
             <div ref={chatEndRef} />
           </div>
 
+          {/* Quick Suggestion Chips */}
+          <div className="px-3 py-1.5 bg-slate-50 dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+            {[
+              '🍲 Pembuatan Wagyu?',
+              '☕ Rahasia Kopi Aren?',
+              '🍰 Pairing Cheesecake?',
+              '🥐 Croissant Truffle?',
+            ].map((q, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => {
+                  setInput(q);
+                }}
+                className="px-2.5 py-1 rounded-xl bg-white dark:bg-slate-800 text-[10px] font-bold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 whitespace-nowrap hover:bg-emerald-50 dark:hover:bg-slate-700 cursor-pointer flex-shrink-0"
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+
           {/* Input Form */}
           <form onSubmit={handleSend} className="p-2.5 bg-slate-100 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex gap-2">
             <input

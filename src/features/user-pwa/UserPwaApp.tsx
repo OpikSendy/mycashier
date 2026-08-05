@@ -180,7 +180,7 @@ export default function UserPwaApp() {
       onMouseMove={handlePageMouseMove}
       onMouseUp={handlePageMouseUp}
       onMouseLeave={handlePageMouseUp}
-      className="w-full max-w-md mx-auto px-4 py-4 pb-28 text-slate-800 dark:text-slate-100 cursor-grab active:cursor-grabbing"
+      className="w-full max-w-md mx-auto px-4 py-4 pb-12 text-slate-800 dark:text-slate-100 cursor-grab active:cursor-grabbing"
     >
       {/* Friendly Clean Header Banner */}
       <div className="mb-5 p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm relative overflow-hidden">
