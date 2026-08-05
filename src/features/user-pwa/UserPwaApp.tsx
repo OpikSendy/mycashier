@@ -1,25 +1,54 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '@/context/AppContext';
 import { TRANSLATIONS } from '@/data/translations';
 import { MenuItem, Order } from '@/data/initialData';
-import { Search, Plus, Minus, ShoppingBag, Sparkles, CheckCircle2, QrCode, X, ArrowRight, Smartphone } from 'lucide-react';
+import {
+  Search,
+  Plus,
+  Minus,
+  ShoppingBag,
+  Sparkles,
+  CheckCircle2,
+  QrCode,
+  X,
+  ArrowRight,
+  UtensilsCrossed,
+  Coffee,
+  Cookie,
+  Cake,
+  Flame,
+  ChefHat,
+  Clock,
+  ChevronRight,
+} from 'lucide-react';
 import Image from 'next/image';
 
 export default function UserPwaApp() {
-  const { language, selectedTable, setSelectedTable, menu, cart, addToCart, updateCartQuantity, clearCart, createOrder, orders } = useApp();
+  const {
+    language,
+    selectedTable,
+    setSelectedTable,
+    menu,
+    cart,
+    addToCart,
+    updateCartQuantity,
+    clearCart,
+    createOrder,
+    orders,
+  } = useApp();
   const t = TRANSLATIONS[language].customer;
 
   const [activeTab, setActiveTab] = useState<'menu' | 'cart' | 'status'>('menu');
-  const [activeCategory, setActiveCategory] = useState<'all' | 'food' | 'drinks' | 'dessert' | 'snack'>('all');
+  const [activeCategory, setActiveCategory] = useState<'all' | 'food' | 'drinks' | 'snack' | 'dessert'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [selectedItemForNotes, setSelectedItemForNotes] = useState<MenuItem | null>(null);
   const [itemNotes, setItemNotes] = useState('');
 
   // Mouse Drag to Scroll Handler for Category Chips
-  const categoryScrollRef = React.useRef<HTMLDivElement>(null);
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
@@ -44,13 +73,21 @@ export default function UserPwaApp() {
 
   const tables = Array.from({ length: 12 }, (_, i) => `Meja ${String(i + 1).padStart(2, '0')}`);
 
-  const filteredMenu = menu.filter((item) => {
-    const matchesCat = activeCategory === 'all' || item.category === activeCategory;
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCat && matchesSearch;
+  // Filtering Menu
+  const searchFilteredMenu = menu.filter((item) => {
+    const matchesSearch =
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesSearch;
   });
 
+  const popularMenu = searchFilteredMenu.filter((i) => i.isPopular);
+  const foodMenu = searchFilteredMenu.filter((i) => i.category === 'food');
+  const drinksMenu = searchFilteredMenu.filter((i) => i.category === 'drinks');
+  const snackMenu = searchFilteredMenu.filter((i) => i.category === 'snack');
+  const dessertMenu = searchFilteredMenu.filter((i) => i.category === 'dessert');
+
+  // Cart Computations
   const cartSubtotal = cart.reduce((sum, c) => sum + c.item.price * c.quantity, 0);
   const cartTax = cartSubtotal * 0.1;
   const cartTotal = cartSubtotal + cartTax;
@@ -75,79 +112,98 @@ export default function UserPwaApp() {
     setActiveTab('status');
   };
 
+  // Helper function to get cart item count for a specific menu item
+  const getItemCartQuantity = (itemId: string) => {
+    const found = cart.find((c) => c.item.id === itemId);
+    return found ? found.quantity : 0;
+  };
+
+  const categories = [
+    { id: 'all', label: 'Semua Menu', icon: Sparkles, color: 'bg-emerald-500 text-white' },
+    { id: 'food', label: 'Makanan', icon: UtensilsCrossed, color: 'bg-amber-500/10 text-amber-600' },
+    { id: 'drinks', label: 'Minuman', icon: Coffee, color: 'bg-cyan-500/10 text-cyan-600' },
+    { id: 'snack', label: 'Cemilan', icon: Cookie, color: 'bg-orange-500/10 text-orange-600' },
+    { id: 'dessert', label: 'Dessert', icon: Cake, color: 'bg-rose-500/10 text-rose-600' },
+  ];
+
   return (
-    <div className="w-full max-w-lg mx-auto px-4 py-4 select-none touch-manipulation overflow-x-hidden pb-24">
-      {/* Table Scan Header */}
-      <div className="mb-4 p-4 rounded-3xl bg-gradient-to-r from-emerald-950 via-slate-900 to-teal-950 border border-emerald-500/30 shadow-lg flex items-center justify-between gap-2">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex-shrink-0">
-            <QrCode className="w-5 h-5" />
+    <div className="w-full max-w-md mx-auto px-4 py-4 select-none touch-pan-y pb-28 text-slate-800 dark:text-slate-100">
+      {/* Friendly Clean Header Banner */}
+      <div className="mb-5 p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm relative overflow-hidden">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900 flex-shrink-0">
+              <QrCode className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                Self-Ordering Resto
+              </p>
+              <h2 className="text-base font-extrabold text-slate-900 dark:text-white leading-tight">
+                Selamat Datang! 👋
+              </h2>
+            </div>
           </div>
-          <div>
-            <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
-              Pelanggan PWA
-            </div>
-            <div className="text-sm font-black text-white">
-              Pesan Dari {selectedTable}
-            </div>
+
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <select
+              value={selectedTable}
+              onChange={(e) => setSelectedTable(e.target.value)}
+              className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
+            >
+              {tables.map((t) => (
+                <option key={t} value={t} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+                  {t}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
-
-        <select
-          value={selectedTable}
-          onChange={(e) => setSelectedTable(e.target.value)}
-          className="px-2.5 py-1.5 rounded-xl bg-slate-800 text-white text-xs font-bold border border-slate-700 focus:outline-none cursor-pointer"
-        >
-          {tables.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
       </div>
 
-      {/* PWA Main View Switcher Tabs */}
-      <div className="flex items-center gap-1 p-1 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 mb-5">
+      {/* Navigation Segment Control */}
+      <div className="grid grid-cols-3 gap-1 p-1.5 rounded-2xl bg-slate-200/60 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 mb-5">
         <button
           onClick={() => setActiveTab('menu')}
-          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
+          className={`py-2 rounded-xl text-xs font-extrabold transition-all ${
             activeTab === 'menu'
-              ? 'bg-emerald-500 text-slate-950 shadow-md'
-              : 'text-slate-600 dark:text-slate-400'
+              ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
           }`}
         >
           Daftar Menu
         </button>
         <button
           onClick={() => setActiveTab('cart')}
-          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all relative ${
+          className={`py-2 rounded-xl text-xs font-extrabold transition-all relative ${
             activeTab === 'cart'
-              ? 'bg-emerald-500 text-slate-950 shadow-md'
-              : 'text-slate-600 dark:text-slate-400'
+              ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
           }`}
         >
           Keranjang
           {totalItemCount > 0 && (
-            <span className="ml-1 px-1.5 py-0.5 rounded-full bg-slate-950 text-emerald-400 text-[10px] font-black">
+            <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-black">
               {totalItemCount}
             </span>
           )}
         </button>
         <button
           onClick={() => setActiveTab('status')}
-          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
+          className={`py-2 rounded-xl text-xs font-extrabold transition-all ${
             activeTab === 'status'
-              ? 'bg-emerald-500 text-slate-950 shadow-md'
-              : 'text-slate-600 dark:text-slate-400'
+              ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
           }`}
         >
-          Status Meja ({myTableOrders.length})
+          Pesanan ({myTableOrders.length})
         </button>
       </div>
 
-      {/* TAB 1: MENU LIST */}
+      {/* TAB 1: MENU LIST WITH PER-CATEGORY SECTIONS */}
       {activeTab === 'menu' && (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {/* Search Bar */}
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -155,134 +211,344 @@ export default function UserPwaApp() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari nama makanan atau minuman..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 text-xs focus:outline-none focus:border-emerald-500 shadow-sm"
+              placeholder="Cari makanan, minuman, atau snack..."
+              className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 text-xs focus:outline-none focus:border-emerald-500 shadow-sm"
             />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
 
-          {/* Category Chips */}
+          {/* Clean Drag-to-Scroll Category Chips Bar */}
           <div
             ref={categoryScrollRef}
             onMouseDown={handleMouseDown}
             onMouseLeave={handleMouseLeave}
             onMouseUp={handleMouseUp}
             onMouseMove={handleMouseMove}
-            className="flex items-center gap-2 overflow-x-auto pb-1.5 no-scrollbar w-full cursor-grab active:cursor-grabbing select-none touch-pan-x"
+            className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar w-full cursor-grab active:cursor-grabbing select-none touch-pan-x"
           >
-            {[
-              { id: 'all', label: 'Semua' },
-              { id: 'food', label: 'Makanan' },
-              { id: 'drinks', label: 'Minuman' },
-              { id: 'snack', label: 'Snack' },
-              { id: 'dessert', label: 'Dessert' },
-            ].map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.id as any)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-                  activeCategory === cat.id
-                    ? 'bg-emerald-500 text-slate-950 shadow-sm'
-                    : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800'
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
+            {categories.map((cat) => {
+              const Icon = cat.icon;
+              const isActive = activeCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveCategory(cat.id as any)}
+                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all ${
+                    isActive
+                      ? 'bg-slate-900 text-white dark:bg-emerald-500 dark:text-slate-950 shadow-sm scale-105'
+                      : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800 hover:bg-slate-50'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{cat.label}</span>
+                </button>
+              );
+            })}
           </div>
 
-          {/* Menu Cards */}
-          <div className="space-y-3">
-            {filteredMenu.map((item) => (
-              <div
-                key={item.id}
-                className="p-3 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 shadow-sm hover:border-emerald-500/40 transition-colors"
-              >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-800 flex-shrink-0 relative">
-                    <Image src={item.image} alt={item.name} width={60} height={60} className="object-cover w-full h-full" />
-                    {item.isPopular && (
-                      <span className="absolute top-1 left-1 px-1 py-0.2 rounded bg-emerald-500 text-slate-950 text-[8px] font-black">
-                        Top
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">{item.name}</h4>
-                    <p className="text-[11px] text-slate-400 truncate mt-0.5">{item.description}</p>
-                    <div className="text-emerald-500 text-xs font-black mt-1">
-                      Rp {item.price.toLocaleString('id-ID')}
-                    </div>
+          {/* CATEGORY SECTION 1: TOP PICKS / REKOMENDASI */}
+          {(activeCategory === 'all' || activeCategory === 'food') && popularMenu.length > 0 && !searchQuery && (
+            <section className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 rounded-xl bg-amber-500/10 text-amber-600 border border-amber-500/20">
+                    <Flame className="w-4 h-4" />
+                  </span>
+                  <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
+                    Paling Favorit (Top Picks)
+                  </h3>
+                </div>
+                <span className="text-[11px] font-bold text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                  {popularMenu.length} Pilihan
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3">
+                {popularMenu.map((item) => (
+                  <MenuItemCard
+                    key={`popular-${item.id}`}
+                    item={item}
+                    quantity={getItemCartQuantity(item.id)}
+                    onAdd={() => setSelectedItemForNotes(item)}
+                    onUpdateQuantity={(delta) => updateCartQuantity(item.id, delta)}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* CATEGORY SECTION 2: MAKANAN UTAMA */}
+          {(activeCategory === 'all' || activeCategory === 'food') && foodMenu.length > 0 && (
+            <section className="space-y-3 pt-2">
+              <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 pb-2">
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 rounded-xl bg-amber-500/10 text-amber-600 border border-amber-500/20">
+                    <UtensilsCrossed className="w-4 h-4" />
+                  </span>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
+                      Makanan Utama
+                    </h3>
+                    <p className="text-[10px] text-slate-500">Hidangan lezat &amp; mengenyangkan</p>
                   </div>
                 </div>
-
-                <button
-                  onClick={() => setSelectedItemForNotes(item)}
-                  disabled={!item.isAvailable}
-                  className="p-2.5 rounded-xl bg-emerald-500 text-slate-950 hover:bg-emerald-400 disabled:opacity-40 font-bold active:scale-95 transition-all flex-shrink-0"
-                  title="Tambah"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
+                <span className="text-[11px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 rounded-full">
+                  {foodMenu.length} Menu
+                </span>
               </div>
-            ))}
-          </div>
+
+              <div className="grid grid-cols-1 gap-3">
+                {foodMenu.map((item) => (
+                  <MenuItemCard
+                    key={item.id}
+                    item={item}
+                    quantity={getItemCartQuantity(item.id)}
+                    onAdd={() => setSelectedItemForNotes(item)}
+                    onUpdateQuantity={(delta) => updateCartQuantity(item.id, delta)}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* CATEGORY SECTION 3: MINUMAN & BEVERAGES */}
+          {(activeCategory === 'all' || activeCategory === 'drinks') && drinksMenu.length > 0 && (
+            <section className="space-y-3 pt-2">
+              <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 pb-2">
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 rounded-xl bg-cyan-500/10 text-cyan-600 border border-cyan-500/20">
+                    <Coffee className="w-4 h-4" />
+                  </span>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
+                      Minuman &amp; Kopi
+                    </h3>
+                    <p className="text-[10px] text-slate-500">Kopi segar, latte &amp; es teh pilihan</p>
+                  </div>
+                </div>
+                <span className="text-[11px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 rounded-full">
+                  {drinksMenu.length} Menu
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3">
+                {drinksMenu.map((item) => (
+                  <MenuItemCard
+                    key={item.id}
+                    item={item}
+                    quantity={getItemCartQuantity(item.id)}
+                    onAdd={() => setSelectedItemForNotes(item)}
+                    onUpdateQuantity={(delta) => updateCartQuantity(item.id, delta)}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* CATEGORY SECTION 4: CEMILAN & SIDE DISH */}
+          {(activeCategory === 'all' || activeCategory === 'snack') && snackMenu.length > 0 && (
+            <section className="space-y-3 pt-2">
+              <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 pb-2">
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 rounded-xl bg-orange-500/10 text-orange-600 border border-orange-500/20">
+                    <Cookie className="w-4 h-4" />
+                  </span>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
+                      Cemilan &amp; Side Dish
+                    </h3>
+                    <p className="text-[10px] text-slate-500">Pastry renyah &amp; makanan ringan</p>
+                  </div>
+                </div>
+                <span className="text-[11px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 rounded-full">
+                  {snackMenu.length} Menu
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3">
+                {snackMenu.map((item) => (
+                  <MenuItemCard
+                    key={item.id}
+                    item={item}
+                    quantity={getItemCartQuantity(item.id)}
+                    onAdd={() => setSelectedItemForNotes(item)}
+                    onUpdateQuantity={(delta) => updateCartQuantity(item.id, delta)}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* CATEGORY SECTION 5: DESSERT & KUE */}
+          {(activeCategory === 'all' || activeCategory === 'dessert') && dessertMenu.length > 0 && (
+            <section className="space-y-3 pt-2">
+              <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 pb-2">
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 rounded-xl bg-rose-500/10 text-rose-600 border border-rose-500/20">
+                    <Cake className="w-4 h-4" />
+                  </span>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
+                      Dessert &amp; Kue
+                    </h3>
+                    <p className="text-[10px] text-slate-500">Penutup manis &amp; kue keju spesial</p>
+                  </div>
+                </div>
+                <span className="text-[11px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 rounded-full">
+                  {dessertMenu.length} Menu
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3">
+                {dessertMenu.map((item) => (
+                  <MenuItemCard
+                    key={item.id}
+                    item={item}
+                    quantity={getItemCartQuantity(item.id)}
+                    onAdd={() => setSelectedItemForNotes(item)}
+                    onUpdateQuantity={(delta) => updateCartQuantity(item.id, delta)}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {searchFilteredMenu.length === 0 && (
+            <div className="p-8 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+              <ChefHat className="w-10 h-10 text-slate-300 mx-auto" />
+              <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                Menu &ldquo;{searchQuery}&rdquo; tidak ditemukan.
+              </p>
+              <button
+                onClick={() => setSearchQuery('')}
+                className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold text-emerald-600"
+              >
+                Reset Pencarian
+              </button>
+            </div>
+          )}
         </div>
       )}
 
-      {/* TAB 2: CART */}
+      {/* TAB 2: CLEAN CART TAB */}
       {activeTab === 'cart' && (
         <div className="space-y-4">
-          <div className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-            <h3 className="text-xs font-bold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-2">
-              Keranjang Pesanan ({selectedTable})
-            </h3>
+          <div className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 pb-3">
+              <div>
+                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
+                  Keranjang Pesanan
+                </h3>
+                <p className="text-[11px] text-slate-500">Pemesanan untuk {selectedTable}</p>
+              </div>
+              {cart.length > 0 && (
+                <button
+                  onClick={clearCart}
+                  className="text-xs text-rose-500 font-bold hover:underline"
+                >
+                  Kosongkan
+                </button>
+              )}
+            </div>
 
             {cart.length === 0 ? (
-              <div className="py-6 text-center text-xs text-slate-400">
-                Keranjang Anda masih kosong. Silakan pilih menu!
+              <div className="py-10 text-center space-y-3">
+                <ShoppingBag className="w-12 h-12 text-slate-300 mx-auto" />
+                <p className="text-xs font-bold text-slate-500">
+                  Keranjang Anda masih kosong. Silakan pilih menu enak!
+                </p>
+                <button
+                  onClick={() => setActiveTab('menu')}
+                  className="px-4 py-2 rounded-xl bg-slate-900 text-white dark:bg-emerald-500 dark:text-slate-950 text-xs font-bold shadow-sm"
+                >
+                  Lihat Daftar Menu
+                </button>
               </div>
             ) : (
-              <div className="space-y-3">
-                <div className="space-y-2">
+              <div className="space-y-4">
+                <div className="space-y-2.5">
                   {cart.map((c, i) => (
-                    <div key={i} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
-                      <div>
-                        <div className="font-bold text-slate-900 dark:text-white">{c.item.name}</div>
-                        <div className="text-emerald-500 font-bold">Rp {(c.item.price * c.quantity).toLocaleString('id-ID')}</div>
-                        {c.notes && <div className="text-[10px] text-amber-500 italic">Catatan: {c.notes}</div>}
+                    <div
+                      key={i}
+                      className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between text-xs"
+                    >
+                      <div className="min-w-0 flex-1 pr-2">
+                        <div className="font-bold text-slate-900 dark:text-white truncate">
+                          {c.item.name}
+                        </div>
+                        <div className="text-emerald-600 dark:text-emerald-400 font-extrabold mt-0.5">
+                          Rp {(c.item.price * c.quantity).toLocaleString('id-ID')}
+                        </div>
+                        {c.notes && (
+                          <div className="text-[10px] text-amber-600 italic mt-0.5">
+                            Catatan: {c.notes}
+                          </div>
+                        )}
                       </div>
 
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => updateCartQuantity(c.item.id, -1)} className="p-1 rounded bg-slate-200 dark:bg-slate-800"><Minus className="w-3 h-3" /></button>
-                        <span className="font-bold text-xs w-4 text-center">{c.quantity}</span>
-                        <button onClick={() => updateCartQuantity(c.item.id, 1)} className="p-1 rounded bg-emerald-500 text-slate-950 font-bold"><Plus className="w-3 h-3" /></button>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <button
+                          onClick={() => updateCartQuantity(c.item.id, -1)}
+                          className="w-7 h-7 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-300 font-bold active:scale-95"
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                        <span className="font-black text-xs w-5 text-center">{c.quantity}</span>
+                        <button
+                          onClick={() => updateCartQuantity(c.item.id, 1)}
+                          className="w-7 h-7 rounded-xl bg-slate-900 text-white dark:bg-emerald-500 dark:text-slate-950 flex items-center justify-center font-bold active:scale-95 shadow-sm"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <div className="pt-2 space-y-2">
-                  <input
-                    type="text"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    placeholder="Nama Pemesan (opsional)..."
-                    className="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500"
-                  />
+                <div className="pt-2 space-y-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">
+                      Nama Pemesan (opsional)
+                    </label>
+                    <input
+                      type="text"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      placeholder="Contoh: Budi (Meja 04)"
+                      className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 shadow-sm"
+                    />
+                  </div>
 
-                  <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-950 text-xs space-y-1">
-                    <div className="flex justify-between text-slate-500"><span>Subtotal:</span><span>Rp {cartSubtotal.toLocaleString('id-ID')}</span></div>
-                    <div className="flex justify-between text-slate-500"><span>Pajak (10%):</span><span>Rp {cartTax.toLocaleString('id-ID')}</span></div>
-                    <div className="flex justify-between font-black text-slate-900 dark:text-white pt-1 border-t border-slate-200 dark:border-slate-800">
-                      <span>Total:</span><span className="text-emerald-500">Rp {cartTotal.toLocaleString('id-ID')}</span>
+                  <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 text-xs space-y-1.5">
+                    <div className="flex justify-between text-slate-500">
+                      <span>Subtotal</span>
+                      <span>Rp {cartSubtotal.toLocaleString('id-ID')}</span>
+                    </div>
+                    <div className="flex justify-between text-slate-500">
+                      <span>Pajak Resto (10%)</span>
+                      <span>Rp {cartTax.toLocaleString('id-ID')}</span>
+                    </div>
+                    <div className="flex justify-between font-black text-sm text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-800">
+                      <span>Total Tagihan</span>
+                      <span className="text-emerald-600 dark:text-emerald-400">
+                        Rp {cartTotal.toLocaleString('id-ID')}
+                      </span>
                     </div>
                   </div>
 
                   <button
                     onClick={handleCheckout}
-                    className="w-full py-3 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/20 active:scale-95"
+                    className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-md shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
                   >
-                    Kirim Pesanan Meja Sekarang
+                    <ShoppingBag className="w-4 h-4" />
+                    <span>Kirim Pesanan Meja Sekarang</span>
                   </button>
                 </div>
               </div>
@@ -291,44 +557,77 @@ export default function UserPwaApp() {
         </div>
       )}
 
-      {/* TAB 3: ORDER STATUS */}
+      {/* TAB 3: CLEAN ORDER STATUS TAB */}
       {activeTab === 'status' && (
-        <div className="space-y-3">
-          <h3 className="text-xs font-bold text-slate-900 dark:text-white">
-            Status Pesanan Meja ({selectedTable})
-          </h3>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
+              Status Pesanan ({selectedTable})
+            </h3>
+            <span className="text-xs text-slate-500 font-bold">
+              {myTableOrders.length} Pesanan Aktif
+            </span>
+          </div>
 
           {myTableOrders.length === 0 ? (
-            <div className="p-6 text-center rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-400 text-xs">
-              Belum ada pesanan aktif untuk {selectedTable}.
+            <div className="p-8 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-400 text-xs space-y-2">
+              <Clock className="w-8 h-8 text-slate-300 mx-auto" />
+              <p>Belum ada pesanan aktif untuk {selectedTable}.</p>
             </div>
           ) : (
             <div className="space-y-3">
               {myTableOrders.map((order) => (
-                <div key={order.id} className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-slate-900 dark:text-white">{order.id}</span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      order.status === 'PENDING' ? 'bg-amber-500/10 text-amber-500' :
-                      order.status === 'COOKING' ? 'bg-cyan-500/10 text-cyan-400' :
-                      order.status === 'READY' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-500/10 text-slate-400'
-                    }`}>
-                      {order.status}
+                <div
+                  key={order.id}
+                  className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 space-y-3 shadow-sm"
+                >
+                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                    <div>
+                      <span className="text-xs font-black text-slate-900 dark:text-white">
+                        {order.id}
+                      </span>
+                      <p className="text-[10px] text-slate-400">{order.createdAt}</p>
+                    </div>
+                    <span
+                      className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full ${
+                        order.status === 'PENDING'
+                          ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
+                          : order.status === 'COOKING'
+                          ? 'bg-cyan-500/10 text-cyan-600 border border-cyan-500/20'
+                          : order.status === 'READY'
+                          ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                          : 'bg-slate-500/10 text-slate-500'
+                      }`}
+                    >
+                      {order.status === 'PENDING'
+                        ? 'Menunggu Konfirmasi'
+                        : order.status === 'COOKING'
+                        ? 'Sedang Dimasak 🍳'
+                        : order.status === 'READY'
+                        ? 'Siap Diantar 🚀'
+                        : order.status}
                     </span>
                   </div>
 
-                  <div className="space-y-1 text-xs text-slate-300">
+                  <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
                     {order.items.map((it, idx) => (
                       <div key={idx} className="flex justify-between">
-                        <span>{it.quantity}x {it.productName}</span>
-                        <span>Rp {(it.price * it.quantity).toLocaleString('id-ID')}</span>
+                        <span>
+                          <strong className="text-slate-900 dark:text-white">{it.quantity}x</strong>{' '}
+                          {it.productName}
+                        </span>
+                        <span className="font-semibold">
+                          Rp {(it.price * it.quantity).toLocaleString('id-ID')}
+                        </span>
                       </div>
                     ))}
                   </div>
 
-                  <div className="flex justify-between items-center text-xs font-black border-t border-slate-800 pt-2">
-                    <span>Total Tagihan:</span>
-                    <span className="text-emerald-500">Rp {order.totalAmount.toLocaleString('id-ID')}</span>
+                  <div className="flex justify-between items-center text-xs font-black border-t border-slate-100 dark:border-slate-800 pt-2.5">
+                    <span>Total Tagihan</span>
+                    <span className="text-emerald-600 dark:text-emerald-400">
+                      Rp {order.totalAmount.toLocaleString('id-ID')}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -337,23 +636,153 @@ export default function UserPwaApp() {
         </div>
       )}
 
-      {/* Notes Modal */}
+      {/* Floating Bottom Cart Bar when browsing Menu Tab */}
+      {activeTab === 'menu' && totalItemCount > 0 && (
+        <aside className="fixed bottom-4 left-4 right-4 z-40 max-w-md mx-auto animate-in slide-in-from-bottom duration-200">
+          <button
+            onClick={() => setActiveTab('cart')}
+            className="w-full p-3.5 rounded-3xl bg-slate-900 text-white dark:bg-emerald-600 dark:text-white shadow-xl shadow-slate-900/20 border border-slate-800 flex items-center justify-between gap-3 active:scale-98 transition-all"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-2xl bg-emerald-500 text-slate-950 font-black text-xs flex items-center justify-center shadow-sm">
+                {totalItemCount}
+              </div>
+              <div className="text-left">
+                <p className="text-[10px] text-slate-300 uppercase tracking-wider font-bold">
+                  Ringkasan Pesanan
+                </p>
+                <p className="text-xs font-extrabold">
+                  Rp {cartTotal.toLocaleString('id-ID')}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1 text-xs font-extrabold text-emerald-400 dark:text-slate-100">
+              <span>Lanjut ke Keranjang</span>
+              <ChevronRight className="w-4 h-4" />
+            </div>
+          </button>
+        </aside>
+      )}
+
+      {/* Item Notes Modal */}
       {selectedItemForNotes && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <form onSubmit={handleConfirmAddToCart} className="w-full max-w-xs p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-2xl">
-            <h4 className="text-xs font-bold text-slate-900 dark:text-white">Catatan: {selectedItemForNotes.name}</h4>
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <form
+            onSubmit={handleConfirmAddToCart}
+            className="w-full max-w-xs p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-2xl"
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+              <h4 className="text-xs font-extrabold text-slate-900 dark:text-white">
+                Catatan: {selectedItemForNotes.name}
+              </h4>
+              <button
+                type="button"
+                onClick={() => setSelectedItemForNotes(null)}
+                className="p-1 text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
             <input
               type="text"
               value={itemNotes}
               onChange={(e) => setItemNotes(e.target.value)}
-              placeholder="Contoh: Less sugar, extra pedas..."
-              className="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500"
+              placeholder="Contoh: Less sugar, es sedikit, pedas..."
+              className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 shadow-sm"
+              autoFocus
             />
+
             <div className="flex gap-2 pt-1">
-              <button type="button" onClick={() => setSelectedItemForNotes(null)} className="flex-1 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-xs font-bold">Batal</button>
-              <button type="submit" className="flex-1 py-2 rounded-xl bg-emerald-500 text-slate-950 text-xs font-bold">Tambah</button>
+              <button
+                type="button"
+                onClick={() => setSelectedItemForNotes(null)}
+                className="flex-1 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-200"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                className="flex-1 py-2.5 rounded-2xl bg-emerald-600 text-white text-xs font-bold shadow-sm hover:bg-emerald-500"
+              >
+                Tambah Pesanan
+              </button>
             </div>
           </form>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Clean Menu Item Card Component
+interface MenuItemCardProps {
+  item: MenuItem;
+  quantity: number;
+  onAdd: () => void;
+  onUpdateQuantity: (delta: number) => void;
+}
+
+function MenuItemCard({ item, quantity, onAdd, onUpdateQuantity }: MenuItemCardProps) {
+  return (
+    <div className="p-3.5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-3.5 shadow-sm hover:shadow-md transition-all">
+      <div className="flex items-center gap-3.5 flex-1 min-w-0">
+        <div className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0 relative border border-slate-100 dark:border-slate-800">
+          <Image
+            src={item.image}
+            alt={item.name}
+            width={70}
+            height={70}
+            className="object-cover w-full h-full"
+          />
+          {item.isPopular && (
+            <span className="absolute top-1 left-1 px-1.5 py-0.2 rounded-md bg-amber-400 text-slate-950 text-[8px] font-black shadow-xs">
+              Top
+            </span>
+          )}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <h4 className="text-xs font-extrabold text-slate-900 dark:text-white truncate">
+            {item.name}
+          </h4>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 mt-0.5 leading-relaxed">
+            {item.description}
+          </p>
+          <div className="text-emerald-600 dark:text-emerald-400 text-xs font-black mt-1">
+            Rp {item.price.toLocaleString('id-ID')}
+          </div>
+        </div>
+      </div>
+
+      {quantity === 0 ? (
+        <button
+          onClick={onAdd}
+          disabled={!item.isAvailable}
+          className="px-3 py-2 rounded-xl bg-slate-900 text-white dark:bg-emerald-500 dark:text-slate-950 hover:bg-slate-800 disabled:opacity-40 text-xs font-extrabold active:scale-95 transition-all flex items-center gap-1 flex-shrink-0 shadow-xs cursor-pointer"
+          title="Tambah ke Keranjang"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>Tambah</span>
+        </button>
+      ) : (
+        <div className="flex items-center gap-1.5 flex-shrink-0 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+          <button
+            onClick={() => onUpdateQuantity(-1)}
+            className="w-6 h-6 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 flex items-center justify-center font-bold shadow-xs active:scale-95"
+          >
+            <Minus className="w-3 h-3" />
+          </button>
+          <span className="text-xs font-black w-4 text-center text-slate-900 dark:text-white">
+            {quantity}
+          </span>
+          <button
+            onClick={() => onUpdateQuantity(1)}
+            className="w-6 h-6 rounded-lg bg-slate-900 text-white dark:bg-emerald-500 dark:text-slate-950 flex items-center justify-center font-bold shadow-xs active:scale-95"
+          >
+            <Plus className="w-3 h-3" />
+          </button>
         </div>
       )}
     </div>

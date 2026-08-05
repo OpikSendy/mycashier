@@ -42,21 +42,21 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 relative selection:bg-emerald-500 selection:text-slate-950 pb-16 touch-manipulation overscroll-none overflow-x-hidden">
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 relative selection:bg-emerald-500 selection:text-slate-950 pb-16 touch-pan-y overscroll-none overflow-x-hidden">
       {/* Standalone Customer PWA Top Bar (Zero Admin/Cashier Links Visible) */}
-      <header className="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-xl border-b border-slate-800/80 px-4 py-3 select-none">
-        <div className="max-w-lg mx-auto flex items-center justify-between gap-2">
+      <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800/80 px-4 py-3 select-none shadow-xs">
+        <div className="max-w-md mx-auto flex items-center justify-between gap-2">
           {/* Brand Logo */}
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl overflow-hidden shadow-md shadow-emerald-500/20 border border-emerald-500/30 flex-shrink-0 relative bg-slate-900">
+            <div className="w-8 h-8 rounded-xl overflow-hidden shadow-sm border border-emerald-500/30 flex-shrink-0 relative bg-slate-900">
               <Image src="/icon.jpg" alt="MyCashier Logo" width={32} height={32} className="object-cover w-full h-full" />
             </div>
             <div>
-              <h1 className="font-black text-base text-white leading-none">
-                My<span className="text-emerald-400">Cashier</span>
+              <h1 className="font-black text-base text-slate-900 dark:text-white leading-none">
+                My<span className="text-emerald-600 dark:text-emerald-400">Cashier</span>
               </h1>
-              <p className="text-[9px] text-slate-400 font-semibold tracking-wider">
-                TABLE SELF-ORDERING PWA
+              <p className="text-[9px] text-slate-500 dark:text-slate-400 font-bold tracking-wider uppercase">
+                Self-Ordering PWA
               </p>
             </div>
           </div>
