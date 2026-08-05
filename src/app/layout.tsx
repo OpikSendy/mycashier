@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { AppProvider } from '@/context/AppContext';
 import QueryProvider from '@/providers/QueryProvider';
+import PwaZoomLock from '@/components/pwa/PwaZoomLock';
+import PwaInstallBanner from '@/components/pwa/PwaInstallBanner';
 
 export const metadata: Metadata = {
   title: 'MyCashier — Mobile PWA & POS System',
@@ -36,8 +38,12 @@ export default function RootLayout({
   return (
     <html lang="id" className="dark scroll-smooth select-none">
       <body className="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-emerald-500 selection:text-slate-950 touch-manipulation overscroll-none overflow-x-hidden">
+        <PwaZoomLock />
         <QueryProvider>
-          <AppProvider>{children}</AppProvider>
+          <AppProvider>
+            {children}
+            <PwaInstallBanner />
+          </AppProvider>
         </QueryProvider>
         <script
           dangerouslySetInnerHTML={{

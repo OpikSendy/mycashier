@@ -9,6 +9,8 @@ import AuthGuardModal from '@/components/auth/AuthGuardModal';
 import { useApp } from '@/context/AppContext';
 import { Monitor, LogOut, Sun, Moon, Globe } from 'lucide-react';
 
+import PwaInstallButton from '@/components/pwa/PwaInstallButton';
+
 export default function CashierPage() {
   const { authRole, logout, theme, toggleTheme, language, toggleLanguage } = useApp();
 
@@ -37,6 +39,8 @@ export default function CashierPage() {
           </Link>
 
           <div className="flex items-center gap-2">
+            <PwaInstallButton />
+
             <Link
               href="/"
               className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 text-xs font-bold transition-colors"

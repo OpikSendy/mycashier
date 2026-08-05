@@ -9,6 +9,8 @@ import Image from 'next/image';
 import { useApp } from '@/context/AppContext';
 import { QrCode, Globe, Sun, Moon, Lock } from 'lucide-react';
 
+import PwaInstallButton from '@/components/pwa/PwaInstallButton';
+
 export default function Home() {
   const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
   const { theme, toggleTheme, language, toggleLanguage, selectedTable, setSelectedTable } = useApp();
@@ -59,8 +61,10 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right Controls (Table Picker, Language, Theme) */}
+          {/* Right Controls (PWA Install, Table Picker, Language, Theme) */}
           <div className="flex items-center gap-1.5">
+            <PwaInstallButton />
+
             <div className="flex items-center gap-1 px-2 py-1 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold">
               <QrCode className="w-3.5 h-3.5" />
               <select
