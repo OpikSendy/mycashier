@@ -24,6 +24,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import Image from 'next/image';
+import TablePickerSelect from '@/components/common/TablePickerSelect';
 
 export default function UserPwaApp() {
   const {
@@ -119,11 +120,11 @@ export default function UserPwaApp() {
   };
 
   const categories = [
-    { id: 'all', label: 'Semua Menu', icon: Sparkles, color: 'bg-emerald-500 text-white' },
-    { id: 'food', label: 'Makanan', icon: UtensilsCrossed, color: 'bg-amber-500/10 text-amber-600' },
-    { id: 'drinks', label: 'Minuman', icon: Coffee, color: 'bg-cyan-500/10 text-cyan-600' },
-    { id: 'snack', label: 'Cemilan', icon: Cookie, color: 'bg-orange-500/10 text-orange-600' },
-    { id: 'dessert', label: 'Dessert', icon: Cake, color: 'bg-rose-500/10 text-rose-600' },
+    { id: 'all', label: t.all, icon: Sparkles, color: 'bg-emerald-500 text-white' },
+    { id: 'food', label: t.food, icon: UtensilsCrossed, color: 'bg-amber-500/10 text-amber-600' },
+    { id: 'drinks', label: t.drinks, icon: Coffee, color: 'bg-cyan-500/10 text-cyan-600' },
+    { id: 'snack', label: t.snack, icon: Cookie, color: 'bg-orange-500/10 text-orange-600' },
+    { id: 'dessert', label: t.dessert, icon: Cake, color: 'bg-rose-500/10 text-rose-600' },
   ];
 
   // Vertical Drag-to-Scroll for Desktop Mouse Users
@@ -167,28 +168,19 @@ export default function UserPwaApp() {
             </div>
             <div>
               <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-                Self-Ordering Resto
+                {t.tableBadge}
               </p>
               <h2 className="text-base font-extrabold text-slate-900 dark:text-white leading-tight">
-                Selamat Datang! 👋
+                {language === 'ID' ? 'Selamat Datang! 👋' : 'Welcome! 👋'}
               </h2>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <select
-              value={selectedTable}
-              onChange={(e) => setSelectedTable(e.target.value)}
-              className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
-            >
-              {tables.map((t) => (
-                <option key={t} value={t} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
-                  {t}
-                </option>
-              ))}
-            </select>
-          </div>
+          <TablePickerSelect
+            value={selectedTable}
+            onChange={setSelectedTable}
+            options={tables}
+          />
         </div>
       </div>
 
@@ -202,7 +194,7 @@ export default function UserPwaApp() {
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
           }`}
         >
-          Daftar Menu
+          {language === 'ID' ? 'Daftar Menu' : 'Menu List'}
         </button>
         <button
           onClick={() => setActiveTab('cart')}
@@ -212,7 +204,7 @@ export default function UserPwaApp() {
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
           }`}
         >
-          Keranjang
+          {language === 'ID' ? 'Keranjang' : 'Cart'}
           {totalItemCount > 0 && (
             <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-black">
               {totalItemCount}
@@ -227,7 +219,7 @@ export default function UserPwaApp() {
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
           }`}
         >
-          Pesanan ({myTableOrders.length})
+          {language === 'ID' ? `Pesanan (${myTableOrders.length})` : `Orders (${myTableOrders.length})`}
         </button>
       </div>
 
@@ -241,7 +233,7 @@ export default function UserPwaApp() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari makanan, minuman, atau snack..."
+              placeholder={t.searchMenu}
               className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 text-xs focus:outline-none focus:border-emerald-500 shadow-sm"
             />
             {searchQuery && (
@@ -306,6 +298,7 @@ export default function UserPwaApp() {
                     key={`popular-${item.id}`}
                     item={item}
                     quantity={getItemCartQuantity(item.id)}
+                    language={language}
                     onAdd={() => setSelectedItemForNotes(item)}
                     onUpdateQuantity={(delta) => updateCartQuantity(item.id, delta)}
                   />
@@ -324,13 +317,15 @@ export default function UserPwaApp() {
                   </span>
                   <div>
                     <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
-                      Makanan Utama
+                      {language === 'ID' ? 'Makanan Utama' : 'Main Course Dishes'}
                     </h3>
-                    <p className="text-[10px] text-slate-500">Hidangan lezat &amp; mengenyangkan</p>
+                    <p className="text-[10px] text-slate-500">
+                      {language === 'ID' ? 'Hidangan lezat & mengenyangkan' : 'Delicious & fulfilling main dishes'}
+                    </p>
                   </div>
                 </div>
                 <span className="text-[11px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 rounded-full">
-                  {foodMenu.length} Menu
+                  {foodMenu.length} {language === 'ID' ? 'Menu' : 'Items'}
                 </span>
               </div>
 
@@ -340,6 +335,7 @@ export default function UserPwaApp() {
                     key={item.id}
                     item={item}
                     quantity={getItemCartQuantity(item.id)}
+                    language={language}
                     onAdd={() => setSelectedItemForNotes(item)}
                     onUpdateQuantity={(delta) => updateCartQuantity(item.id, delta)}
                   />
@@ -358,13 +354,15 @@ export default function UserPwaApp() {
                   </span>
                   <div>
                     <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
-                      Minuman &amp; Kopi
+                      {language === 'ID' ? 'Minuman & Kopi' : 'Beverages & Coffee'}
                     </h3>
-                    <p className="text-[10px] text-slate-500">Kopi segar, latte &amp; es teh pilihan</p>
+                    <p className="text-[10px] text-slate-500">
+                      {language === 'ID' ? 'Kopi segar, latte & es teh pilihan' : 'Fresh coffee, latte & iced teas'}
+                    </p>
                   </div>
                 </div>
                 <span className="text-[11px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 rounded-full">
-                  {drinksMenu.length} Menu
+                  {drinksMenu.length} {language === 'ID' ? 'Menu' : 'Items'}
                 </span>
               </div>
 
@@ -374,6 +372,7 @@ export default function UserPwaApp() {
                     key={item.id}
                     item={item}
                     quantity={getItemCartQuantity(item.id)}
+                    language={language}
                     onAdd={() => setSelectedItemForNotes(item)}
                     onUpdateQuantity={(delta) => updateCartQuantity(item.id, delta)}
                   />
@@ -392,13 +391,15 @@ export default function UserPwaApp() {
                   </span>
                   <div>
                     <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
-                      Cemilan &amp; Side Dish
+                      {language === 'ID' ? 'Cemilan & Side Dish' : 'Snacks & Side Dishes'}
                     </h3>
-                    <p className="text-[10px] text-slate-500">Pastry renyah &amp; makanan ringan</p>
+                    <p className="text-[10px] text-slate-500">
+                      {language === 'ID' ? 'Pastry renyah & makanan ringan' : 'Crispy pastries & light snacks'}
+                    </p>
                   </div>
                 </div>
                 <span className="text-[11px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 rounded-full">
-                  {snackMenu.length} Menu
+                  {snackMenu.length} {language === 'ID' ? 'Menu' : 'Items'}
                 </span>
               </div>
 
@@ -408,6 +409,7 @@ export default function UserPwaApp() {
                     key={item.id}
                     item={item}
                     quantity={getItemCartQuantity(item.id)}
+                    language={language}
                     onAdd={() => setSelectedItemForNotes(item)}
                     onUpdateQuantity={(delta) => updateCartQuantity(item.id, delta)}
                   />
@@ -426,13 +428,15 @@ export default function UserPwaApp() {
                   </span>
                   <div>
                     <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
-                      Dessert &amp; Kue
+                      {language === 'ID' ? 'Dessert & Kue' : 'Desserts & Cakes'}
                     </h3>
-                    <p className="text-[10px] text-slate-500">Penutup manis &amp; kue keju spesial</p>
+                    <p className="text-[10px] text-slate-500">
+                      {language === 'ID' ? 'Penutup manis & kue keju spesial' : 'Sweet desserts & cheesecake specials'}
+                    </p>
                   </div>
                 </div>
                 <span className="text-[11px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 rounded-full">
-                  {dessertMenu.length} Menu
+                  {dessertMenu.length} {language === 'ID' ? 'Menu' : 'Items'}
                 </span>
               </div>
 
@@ -442,6 +446,7 @@ export default function UserPwaApp() {
                     key={item.id}
                     item={item}
                     quantity={getItemCartQuantity(item.id)}
+                    language={language}
                     onAdd={() => setSelectedItemForNotes(item)}
                     onUpdateQuantity={(delta) => updateCartQuantity(item.id, delta)}
                   />
@@ -750,11 +755,12 @@ export default function UserPwaApp() {
 interface MenuItemCardProps {
   item: MenuItem;
   quantity: number;
+  language: string;
   onAdd: () => void;
   onUpdateQuantity: (delta: number) => void;
 }
 
-function MenuItemCard({ item, quantity, onAdd, onUpdateQuantity }: MenuItemCardProps) {
+function MenuItemCard({ item, quantity, language, onAdd, onUpdateQuantity }: MenuItemCardProps) {
   return (
     <div className="p-3.5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-3.5 shadow-sm hover:shadow-md transition-all">
       <div className="flex items-center gap-3.5 flex-1 min-w-0">
@@ -794,7 +800,7 @@ function MenuItemCard({ item, quantity, onAdd, onUpdateQuantity }: MenuItemCardP
           title="Tambah ke Keranjang"
         >
           <Plus className="w-3.5 h-3.5" />
-          <span>Tambah</span>
+          <span>{language === 'ID' ? 'Tambah' : 'Add'}</span>
         </button>
       ) : (
         <div className="flex items-center gap-1.5 flex-shrink-0 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
