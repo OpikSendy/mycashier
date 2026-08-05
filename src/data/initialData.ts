@@ -3,6 +3,7 @@ export interface MenuItem {
   name: string;
   nameEn?: string;
   category: 'food' | 'drinks' | 'dessert' | 'snack';
+  variantPreset?: 'drinks' | 'food' | 'snack' | 'dessert' | 'none';
   price: number;
   description: string;
   descriptionEn?: string;
@@ -41,6 +42,7 @@ export const INITIAL_MENU: MenuItem[] = [
     name: 'Kopi Susu Gula Aren Premium',
     nameEn: 'Premium Aren Palm Sugar Milk Coffee',
     category: 'drinks',
+    variantPreset: 'drinks',
     price: 22000,
     description: 'Espresso ganda diseduh dengan susu segar murni dan gula aren organik khas Nusantara.',
     descriptionEn: 'Double shot espresso brewed with pure fresh milk and authentic organic palm sugar.',
@@ -53,6 +55,7 @@ export const INITIAL_MENU: MenuItem[] = [
     name: 'Nasi Goreng Wagyu Special',
     nameEn: 'Special Wagyu Beef Fried Rice',
     category: 'food',
+    variantPreset: 'food',
     price: 45000,
     description: 'Nasi goreng bumbu rempah spesial dipadu dengan potongan daging Wagyu lembut dan telur mata sapi.',
     descriptionEn: 'Special spiced fried rice topped with tender Wagyu beef chunks and a sunny-side-up egg.',
@@ -65,6 +68,7 @@ export const INITIAL_MENU: MenuItem[] = [
     name: 'Matcha Cream Latté',
     nameEn: 'Uji Matcha Cream Latte',
     category: 'drinks',
+    variantPreset: 'drinks',
     price: 28000,
     description: 'Matcha Uji Jepang kelas tinggi dipadu susu oat gurih dan foam krim lembut.',
     descriptionEn: 'High-grade Japanese Uji matcha paired with creamy oat milk and smooth foam.',
@@ -76,6 +80,7 @@ export const INITIAL_MENU: MenuItem[] = [
     name: 'Beef Teriyaki Rice Bowl',
     nameEn: 'Imported Beef Teriyaki Rice Bowl',
     category: 'food',
+    variantPreset: 'food',
     price: 38000,
     description: 'Irisan daging sapi impor ditumis dengan saus Teriyaki otentik di atas nasi hangat pulen.',
     descriptionEn: 'Sliced imported beef sautéed in authentic Teriyaki sauce served over warm fluffy rice.',
@@ -88,6 +93,7 @@ export const INITIAL_MENU: MenuItem[] = [
     name: 'Croissant Butter Truffle',
     nameEn: 'Truffle Butter French Croissant',
     category: 'snack',
+    variantPreset: 'snack',
     price: 25000,
     description: 'Pastry khas Prancis berlapis mentega panggang renyah di luar, lembut berlapis di dalam.',
     descriptionEn: 'Classic French butter croissant baked crispy on the outside, flaky and soft inside.',
@@ -99,6 +105,7 @@ export const INITIAL_MENU: MenuItem[] = [
     name: 'Biscoff Lotus Cheese Cake',
     nameEn: 'Lotus Biscoff Baked Cheesecake',
     category: 'dessert',
+    variantPreset: 'dessert',
     price: 32000,
     description: 'Kue keju panggang lezat ditaburi remahan biskuit Lotus Biscoff dan lelehan caramel.',
     descriptionEn: 'Delicious baked cheesecake topped with crunchy Lotus Biscoff crumbs and caramel drizzle.',
@@ -111,6 +118,7 @@ export const INITIAL_MENU: MenuItem[] = [
     name: 'Iced Lemon Tea Sparkle',
     nameEn: 'Sparkling Iced Lemon Tea',
     category: 'drinks',
+    variantPreset: 'drinks',
     price: 18000,
     description: 'Teh lemon segar disajikan dingin dengan es dan sentuhan soda menyegarkan.',
     descriptionEn: 'Fresh brewed lemon tea served ice-cold with a splash of refreshing sparkling soda.',
@@ -122,6 +130,7 @@ export const INITIAL_MENU: MenuItem[] = [
     name: 'French Fries Truffle Oil',
     nameEn: 'Truffle Oil & Parmesan French Fries',
     category: 'snack',
+    variantPreset: 'snack',
     price: 24000,
     description: 'Kentang goreng renyah ditaburi garam laut, keju parmesan, dan aroma truffle.',
     descriptionEn: 'Crispy golden french fries tossed with sea salt, parmesan cheese, and truffle aroma.',
@@ -136,8 +145,8 @@ export const INITIAL_ORDERS: Order[] = [
     tableNumber: 'Meja 04',
     customerName: 'Sendy',
     items: [
-      { id: 'item-1', productId: 'prod-2', productName: 'Nasi Goreng Wagyu Special', price: 45000, quantity: 1, notes: 'Telur setengah matang' },
-      { id: 'item-2', productId: 'prod-1', productName: 'Kopi Susu Gula Aren Premium', price: 22000, quantity: 1, notes: 'Less Sugar' },
+      { id: 'item-1', productId: 'prod-2', productName: 'Nasi Goreng Wagyu Special', price: 45000, quantity: 1, notes: 'Telur setengah matang, Pedas Sedang' },
+      { id: 'item-2', productId: 'prod-1', productName: 'Kopi Susu Gula Aren Premium', price: 22000, quantity: 1, notes: 'Less Sugar (50%), Normal Ice' },
     ],
     totalAmount: 67000,
     status: 'COOKING',

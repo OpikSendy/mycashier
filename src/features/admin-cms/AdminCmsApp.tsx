@@ -32,6 +32,7 @@ export default function AdminCmsApp() {
   const [name, setName] = useState('');
   const [nameEn, setNameEn] = useState('');
   const [category, setCategory] = useState<'food' | 'drinks' | 'dessert' | 'snack'>('food');
+  const [variantPreset, setVariantPreset] = useState<'drinks' | 'food' | 'snack' | 'dessert' | 'none'>('food');
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
   const [descriptionEn, setDescriptionEn] = useState('');
@@ -50,6 +51,7 @@ export default function AdminCmsApp() {
       name,
       nameEn: nameEn || name,
       category,
+      variantPreset,
       price: Number(price),
       description: description || 'Menu berkualitas pilihan restoran.',
       descriptionEn: descriptionEn || description || 'Quality restaurant selected menu.',
@@ -65,6 +67,7 @@ export default function AdminCmsApp() {
     setDescription('');
     setDescriptionEn('');
     setImage('');
+    setVariantPreset('food');
   };
 
   const handleCopyQrLink = (tableName: string) => {
@@ -186,6 +189,16 @@ export default function AdminCmsApp() {
                   {item.nameEn && <p className="text-[10px] text-slate-400 italic">{item.nameEn}</p>}
                   <div className="text-emerald-600 dark:text-emerald-400 text-xs font-black mt-0.5">
                     Rp {item.price.toLocaleString('id-ID')}
+                  </div>
+                  <div className="flex items-center gap-1 mt-1">
+                    <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                      {item.category}
+                    </span>
+                    {item.variantPreset && item.variantPreset !== 'none' && (
+                      <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                        +{item.variantPreset}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -337,6 +350,17 @@ export default function AdminCmsApp() {
                 <option value="drinks">Minuman</option>
                 <option value="snack">Snack</option>
                 <option value="dessert">Dessert</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Preset Modifiers / Varian Pemesanan</label>
+              <select value={variantPreset} onChange={(e) => setVariantPreset(e.target.value as any)} className="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs focus:outline-none focus:border-emerald-500">
+                <option value="drinks">Minuman (Gula &amp; Es)</option>
+                <option value="food">Makanan (Pedas &amp; Telur)</option>
+                <option value="snack">Cemilan (Saus)</option>
+                <option value="dessert">Dessert (Topping)</option>
+                <option value="none">Tanpa Varian</option>
               </select>
             </div>
 

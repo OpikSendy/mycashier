@@ -23,6 +23,7 @@ import {
   Clock,
   ChevronRight,
   Lock,
+  Check,
 } from 'lucide-react';
 import Image from 'next/image';
 import TablePickerSelect from '@/components/common/TablePickerSelect';
@@ -48,6 +49,7 @@ export default function UserPwaApp() {
   const [customerName, setCustomerName] = useState('');
   const [selectedItemForNotes, setSelectedItemForNotes] = useState<MenuItem | null>(null);
   const [itemNotes, setItemNotes] = useState('');
+  const [selectedVariantChips, setSelectedVariantChips] = useState<Record<string, string>>({});
 
   // Table Lock via QR Scan URL Query Param (?table=Meja%2004 or ?table=04)
   const [isTableLocked, setIsTableLocked] = useState<boolean>(false);
@@ -122,9 +124,14 @@ export default function UserPwaApp() {
   const handleConfirmAddToCart = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedItemForNotes) return;
-    addToCart(selectedItemForNotes, itemNotes);
+
+    const chipParts = Object.values(selectedVariantChips).filter(Boolean);
+    const combinedNotes = [chipParts.join(', '), itemNotes.trim()].filter(Boolean).join(' | ');
+
+    addToCart(selectedItemForNotes, combinedNotes);
     setSelectedItemForNotes(null);
     setItemNotes('');
+    setSelectedVariantChips({});
   };
 
   const handleCheckout = (e: React.FormEvent) => {
@@ -730,48 +737,267 @@ export default function UserPwaApp() {
         </aside>
       )}
 
-      {/* Item Notes Modal */}
+      {/* Interactive Item Customization Modal */}
       {selectedItemForNotes && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150">
           <form
             onSubmit={handleConfirmAddToCart}
-            className="w-full max-w-xs p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-2xl"
+            className="w-full max-w-sm p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 space-y-4 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
           >
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-              <h4 className="text-xs font-extrabold text-slate-900 dark:text-white">
-                Catatan: {selectedItemForNotes.name}
-              </h4>
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0 relative border border-slate-200/50">
+                  <Image
+                    src={selectedItemForNotes.image}
+                    alt={selectedItemForNotes.name}
+                    width={50}
+                    height={50}
+                    className="object-cover w-full h-full"
+                  />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black text-slate-900 dark:text-white leading-tight">
+                    {language === 'EN' && selectedItemForNotes.nameEn ? selectedItemForNotes.nameEn : selectedItemForNotes.name}
+                  </h4>
+                  <p className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5">
+                    Rp {selectedItemForNotes.price.toLocaleString('id-ID')}
+                  </p>
+                </div>
+              </div>
+
               <button
                 type="button"
-                onClick={() => setSelectedItemForNotes(null)}
-                className="p-1 text-slate-400 hover:text-slate-600"
+                onClick={() => {
+                  setSelectedItemForNotes(null);
+                  setSelectedVariantChips({});
+                }}
+                className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <input
-              type="text"
-              value={itemNotes}
-              onChange={(e) => setItemNotes(e.target.value)}
-              placeholder="Contoh: Less sugar, es sedikit, pedas..."
-              className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 shadow-sm"
-              autoFocus
-            />
+            <div className="flex-1 overflow-y-auto space-y-4 pr-1 text-xs no-scrollbar">
+              {/* CATEGORY 1: DRINKS VARIANTS (Sugar & Ice) */}
+              {(selectedItemForNotes.variantPreset === 'drinks' || selectedItemForNotes.category === 'drinks') && (
+                <>
+                  <div className="space-y-2">
+                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                      {language === 'ID' ? 'Level Gula (Sugar Level)' : 'Sugar Level'}
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[
+                        { id: 'Normal Sugar', label: language === 'ID' ? 'Gula Normal' : 'Normal Sugar' },
+                        { id: 'Less Sugar (50%)', label: language === 'ID' ? 'Less Sugar (50%)' : 'Less Sugar (50%)' },
+                        { id: 'No Sugar (0%)', label: language === 'ID' ? 'Tanpa Gula (0%)' : 'No Sugar (0%)' },
+                      ].map((opt) => {
+                        const isSelected = selectedVariantChips['sugar'] === opt.id;
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() =>
+                              setSelectedVariantChips((prev) => ({
+                                ...prev,
+                                sugar: isSelected ? '' : opt.id,
+                              }))
+                            }
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                              isSelected
+                                ? 'bg-emerald-500 text-slate-950 shadow-xs'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-200'
+                            }`}
+                          >
+                            {isSelected && <Check className="w-3 h-3 text-slate-950 font-black" />}
+                            <span>{opt.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
 
-            <div className="flex gap-2 pt-1">
+                  <div className="space-y-2">
+                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                      {language === 'ID' ? 'Level Es (Ice Level)' : 'Ice Level'}
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[
+                        { id: 'Normal Ice', label: language === 'ID' ? 'Es Normal' : 'Normal Ice' },
+                        { id: 'Less Ice', label: language === 'ID' ? 'Less Ice (Es Sedikit)' : 'Less Ice' },
+                        { id: 'No Ice', label: language === 'ID' ? 'Tanpa Es' : 'No Ice' },
+                      ].map((opt) => {
+                        const isSelected = selectedVariantChips['ice'] === opt.id;
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() =>
+                              setSelectedVariantChips((prev) => ({
+                                ...prev,
+                                ice: isSelected ? '' : opt.id,
+                              }))
+                            }
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                              isSelected
+                                ? 'bg-emerald-500 text-slate-950 shadow-xs'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-200'
+                            }`}
+                          >
+                            {isSelected && <Check className="w-3 h-3 text-slate-950 font-black" />}
+                            <span>{opt.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* CATEGORY 2: FOOD VARIANTS (Spiciness & Egg) */}
+              {(selectedItemForNotes.variantPreset === 'food' || selectedItemForNotes.category === 'food') && (
+                <>
+                  <div className="space-y-2">
+                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                      {language === 'ID' ? 'Tingkat Pedas' : 'Spiciness Level'}
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[
+                        { id: 'Tidak Pedas', label: language === 'ID' ? 'Tidak Pedas' : 'Not Spicy' },
+                        { id: 'Pedas Sedang 🌶️', label: language === 'ID' ? 'Pedas Sedang 🌶️' : 'Medium Spicy 🌶️' },
+                        { id: 'Extra Pedas 🔥', label: language === 'ID' ? 'Extra Pedas 🔥' : 'Extra Spicy 🔥' },
+                      ].map((opt) => {
+                        const isSelected = selectedVariantChips['spicy'] === opt.id;
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() =>
+                              setSelectedVariantChips((prev) => ({
+                                ...prev,
+                                spicy: isSelected ? '' : opt.id,
+                              }))
+                            }
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                              isSelected
+                                ? 'bg-emerald-500 text-slate-950 shadow-xs'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-200'
+                            }`}
+                          >
+                            {isSelected && <Check className="w-3 h-3 text-slate-950 font-black" />}
+                            <span>{opt.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                      {language === 'ID' ? 'Pilihan Telur' : 'Egg Preference'}
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[
+                        { id: 'Telur Matang', label: language === 'ID' ? 'Telur Matang' : 'Well Done Egg' },
+                        { id: 'Setengah Matang', label: language === 'ID' ? 'Setengah Matang' : 'Half Cooked Egg' },
+                      ].map((opt) => {
+                        const isSelected = selectedVariantChips['egg'] === opt.id;
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() =>
+                              setSelectedVariantChips((prev) => ({
+                                ...prev,
+                                egg: isSelected ? '' : opt.id,
+                              }))
+                            }
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                              isSelected
+                                ? 'bg-emerald-500 text-slate-950 shadow-xs'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-200'
+                            }`}
+                          >
+                            {isSelected && <Check className="w-3 h-3 text-slate-950 font-black" />}
+                            <span>{opt.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* CATEGORY 3: SNACK VARIANTS (Sauce & Toppings) */}
+              {(selectedItemForNotes.variantPreset === 'snack' || selectedItemForNotes.category === 'snack') && (
+                <div className="space-y-2">
+                  <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                    {language === 'ID' ? 'Pilihan Saus' : 'Sauce Option'}
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { id: 'Mayo Garlic', label: 'Mayo Garlic' },
+                      { id: 'Extra Saus Sambal', label: language === 'ID' ? 'Extra Saus Sambal' : 'Extra Chili Sauce' },
+                      { id: 'Tanpa Saus', label: language === 'ID' ? 'Tanpa Saus' : 'No Sauce' },
+                    ].map((opt) => {
+                      const isSelected = selectedVariantChips['sauce'] === opt.id;
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() =>
+                            setSelectedVariantChips((prev) => ({
+                              ...prev,
+                              sauce: isSelected ? '' : opt.id,
+                            }))
+                          }
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                            isSelected
+                              ? 'bg-emerald-500 text-slate-950 shadow-xs'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-200'
+                          }`}
+                        >
+                          {isSelected && <Check className="w-3 h-3 text-slate-950 font-black" />}
+                          <span>{opt.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Freeform Notes Input */}
+              <div className="space-y-1.5 pt-1">
+                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                  {language === 'ID' ? 'Catatan Tambahan Khusus (Opsional)' : 'Additional Custom Request'}
+                </label>
+                <input
+                  type="text"
+                  value={itemNotes}
+                  onChange={(e) => setItemNotes(e.target.value)}
+                  placeholder={language === 'ID' ? 'Contoh: Es dipisah, jangan pakai bawang...' : 'Example: Extra ice separately...'}
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 shadow-sm border border-slate-200/80 dark:border-slate-700"
+                />
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex-shrink-0">
               <button
                 type="button"
-                onClick={() => setSelectedItemForNotes(null)}
-                className="flex-1 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-200"
+                onClick={() => {
+                  setSelectedItemForNotes(null);
+                  setSelectedVariantChips({});
+                }}
+                className="flex-1 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-200 cursor-pointer"
               >
-                Batal
+                {language === 'ID' ? 'Batal' : 'Cancel'}
               </button>
               <button
                 type="submit"
-                className="flex-1 py-2.5 rounded-2xl bg-emerald-600 text-white text-xs font-bold shadow-sm hover:bg-emerald-500"
+                className="flex-1 py-2.5 rounded-2xl bg-slate-900 text-white dark:bg-emerald-500 dark:text-slate-950 text-xs font-extrabold shadow-md hover:bg-slate-800 cursor-pointer active:scale-98 transition-all"
               >
-                Tambah Pesanan
+                {language === 'ID' ? 'Tambah ke Pesanan' : 'Add to Cart'}
               </button>
             </div>
           </form>
