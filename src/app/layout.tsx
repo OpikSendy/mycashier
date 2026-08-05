@@ -1,11 +1,12 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { AppProvider } from '@/context/AppContext';
+import QueryProvider from '@/providers/QueryProvider';
 
 export const metadata: Metadata = {
   title: 'MyCashier — Mobile PWA & POS System',
   description: 'Aplikasi Kasir Online & Pemesanan Mandiri Dari Meja (Table QR Self-Ordering) Berbasis Real PWA.',
-  keywords: ['MyCashier', 'POS Kasir Online', 'Table QR Self-Ordering', 'Aplikasi Kasir Resto', 'PWA', 'Next.js 16'],
+  keywords: ['MyCashier', 'POS Kasir Online', 'Table QR Self-Ordering', 'Aplikasi Kasir Resto', 'PWA', 'Next.js 16', 'React Query', 'Redis'],
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -35,7 +36,9 @@ export default function RootLayout({
   return (
     <html lang="id" className="dark scroll-smooth select-none">
       <body className="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-emerald-500 selection:text-slate-950 touch-manipulation overscroll-none overflow-x-hidden">
-        <AppProvider>{children}</AppProvider>
+        <QueryProvider>
+          <AppProvider>{children}</AppProvider>
+        </QueryProvider>
         <script
           dangerouslySetInnerHTML={{
             __html: `
