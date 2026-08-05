@@ -18,6 +18,30 @@ export default function UserPwaApp() {
   const [selectedItemForNotes, setSelectedItemForNotes] = useState<MenuItem | null>(null);
   const [itemNotes, setItemNotes] = useState('');
 
+  // Mouse Drag to Scroll Handler for Category Chips
+  const categoryScrollRef = React.useRef<HTMLDivElement>(null);
+  const [isMouseDown, setIsMouseDown] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!categoryScrollRef.current) return;
+    setIsMouseDown(true);
+    setStartX(e.pageX - categoryScrollRef.current.offsetLeft);
+    setScrollLeft(categoryScrollRef.current.scrollLeft);
+  };
+
+  const handleMouseLeave = () => setIsMouseDown(false);
+  const handleMouseUp = () => setIsMouseDown(false);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isMouseDown || !categoryScrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - categoryScrollRef.current.offsetLeft;
+    const walk = (x - startX) * 2;
+    categoryScrollRef.current.scrollLeft = scrollLeft - walk;
+  };
+
   const tables = Array.from({ length: 12 }, (_, i) => `Meja ${String(i + 1).padStart(2, '0')}`);
 
   const filteredMenu = menu.filter((item) => {
@@ -137,7 +161,14 @@ export default function UserPwaApp() {
           </div>
 
           {/* Category Chips */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar w-full">
+          <div
+            ref={categoryScrollRef}
+            onMouseDown={handleMouseDown}
+            onMouseLeave={handleMouseLeave}
+            onMouseUp={handleMouseUp}
+            onMouseMove={handleMouseMove}
+            className="flex items-center gap-2 overflow-x-auto pb-1.5 no-scrollbar w-full cursor-grab active:cursor-grabbing select-none touch-pan-x"
+          >
             {[
               { id: 'all', label: 'Semua' },
               { id: 'food', label: 'Makanan' },

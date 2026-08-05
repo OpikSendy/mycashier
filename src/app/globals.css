@@ -16,15 +16,15 @@ html.light, html:not(.dark) {
 
 /* Native Mobile PWA Anti-Zoom & Touch Optimizations */
 html, body {
-  touch-action: manipulation;
+  touch-action: pan-x pan-y;
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   -webkit-user-select: none;
-  overscroll-behavior-y: none;
-  overscroll-behavior-x: none;
+  overscroll-behavior: contain;
   overflow-x: hidden;
   max-width: 100vw;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Prevent iOS Safari auto-zoom on input focus */
