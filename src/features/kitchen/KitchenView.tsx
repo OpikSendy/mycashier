@@ -13,26 +13,32 @@ export default function KitchenView() {
   const getOrdersByStatus = (status: OrderStatus) => orders.filter((o) => o.status === status);
 
   const columns: { id: OrderStatus; label: string; color: string; icon: React.ReactNode }[] = [
-    { id: 'PENDING', label: t.pending, color: 'border-amber-500/40 text-amber-500 bg-amber-500/10', icon: <Clock className="w-4 h-4" /> },
-    { id: 'COOKING', label: t.cooking, color: 'border-cyan-500/40 text-cyan-400 bg-cyan-500/10', icon: <Flame className="w-4 h-4" /> },
-    { id: 'READY', label: t.ready, color: 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10', icon: <BellRing className="w-4 h-4" /> },
-    { id: 'SERVED', label: t.served, color: 'border-slate-500/40 text-slate-400 bg-slate-500/10', icon: <CheckCircle2 className="w-4 h-4" /> },
+    { id: 'PENDING', label: t.pending, color: 'border-amber-500/30 text-amber-600 dark:text-amber-400 bg-amber-500/10', icon: <Clock className="w-4 h-4" /> },
+    { id: 'COOKING', label: t.cooking, color: 'border-cyan-500/30 text-cyan-600 dark:text-cyan-400 bg-cyan-500/10', icon: <Flame className="w-4 h-4" /> },
+    { id: 'READY', label: t.ready, color: 'border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10', icon: <BellRing className="w-4 h-4" /> },
+    { id: 'SERVED', label: t.served, color: 'border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800', icon: <CheckCircle2 className="w-4 h-4" /> },
   ];
 
   return (
-    <div className="py-6 px-4 max-w-7xl mx-auto select-none pb-24">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-2">
-          <UtensilsCrossed className="w-3.5 h-3.5" />
-          <span>{t.kdsTitle}</span>
+    <div className="py-6 px-4 max-w-7xl mx-auto select-none pb-24 text-slate-800 dark:text-slate-100">
+      {/* Header Banner */}
+      <div className="mb-6 p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900 flex-shrink-0">
+            <UtensilsCrossed className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-black uppercase tracking-wider mb-1 border border-amber-500/20">
+              <span>{t.kdsTitle}</span>
+            </div>
+            <h2 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white leading-tight">
+              {language === 'ID' ? 'Papan Tiket Antrean Dapur & Bar' : 'Kitchen & Bar Ticket Display System'}
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              {t.kdsSub}
+            </p>
+          </div>
         </div>
-        <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white">
-          Papan Tiket Antrean Dapur & Bar
-        </h2>
-        <p className="text-slate-600 dark:text-slate-400 text-xs md:text-sm">
-          {t.kdsSub}
-        </p>
       </div>
 
       {/* Kanban Board Columns */}
@@ -40,15 +46,15 @@ export default function KitchenView() {
         {columns.map((col) => {
           const colOrders = getOrdersByStatus(col.id);
           return (
-            <div key={col.id} className="p-4 rounded-3xl bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between min-h-[600px]">
+            <div key={col.id} className="p-4 rounded-3xl bg-slate-100/70 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between min-h-[600px] shadow-xs">
               <div>
                 {/* Column Header */}
-                <div className={`p-3 rounded-2xl border ${col.color} flex items-center justify-between mb-4 font-bold text-xs`}>
+                <div className={`p-3 rounded-2xl border ${col.color} flex items-center justify-between mb-4 font-extrabold text-xs shadow-2xs`}>
                   <div className="flex items-center gap-2">
                     {col.icon}
                     <span>{col.label}</span>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full bg-slate-950/40 text-white font-black">
+                  <span className="px-2 py-0.5 rounded-full bg-white dark:bg-slate-950 font-black text-slate-900 dark:text-white shadow-2xs">
                     {colOrders.length}
                   </span>
                 </div>
@@ -58,7 +64,7 @@ export default function KitchenView() {
                   {colOrders.map((order) => (
                     <div
                       key={order.id}
-                      className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md space-y-3"
+                      className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3 hover:shadow-md transition-all"
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
@@ -67,17 +73,17 @@ export default function KitchenView() {
                         <span className="text-[10px] text-slate-400 font-mono">{order.createdAt}</span>
                       </div>
 
-                      <div className="text-xs font-bold text-slate-900 dark:text-white">
-                        Pemesan: {order.customerName}
+                      <div className="text-xs font-black text-slate-900 dark:text-white">
+                        {language === 'ID' ? 'Pemesan:' : 'Customer:'} {order.customerName}
                       </div>
 
                       {/* Items to Cook */}
                       <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
                         {order.items.map((item, i) => (
                           <div key={i} className="text-xs text-slate-800 dark:text-slate-200">
-                            <span className="font-black text-emerald-500">{item.quantity}x</span> {item.productName}
+                            <span className="font-black text-emerald-600 dark:text-emerald-400">{item.quantity}x</span> {item.productName}
                             {item.notes && (
-                              <div className="text-[10px] text-amber-500 font-semibold italic pl-4">
+                              <div className="text-[10px] text-amber-600 dark:text-amber-400 font-bold italic pl-3.5 mt-0.5">
                                 ↳ {item.notes}
                               </div>
                             )}
@@ -90,9 +96,9 @@ export default function KitchenView() {
                         {col.id === 'PENDING' && (
                           <button
                             onClick={() => updateOrderStatus(order.id, 'COOKING')}
-                            className="w-full py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md"
+                            className="w-full py-2.5 rounded-2xl bg-cyan-600 hover:bg-cyan-500 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer"
                           >
-                            <Flame className="w-3.5 h-3.5" />
+                            <Flame className="w-4 h-4" />
                             <span>{t.markCooking}</span>
                           </button>
                         )}
@@ -100,9 +106,9 @@ export default function KitchenView() {
                         {col.id === 'COOKING' && (
                           <button
                             onClick={() => updateOrderStatus(order.id, 'READY')}
-                            className="w-full py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md"
+                            className="w-full py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer"
                           >
-                            <BellRing className="w-3.5 h-3.5" />
+                            <BellRing className="w-4 h-4" />
                             <span>{t.markReady}</span>
                           </button>
                         )}
@@ -110,9 +116,9 @@ export default function KitchenView() {
                         {col.id === 'READY' && (
                           <button
                             onClick={() => updateOrderStatus(order.id, 'SERVED')}
-                            className="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 transition-all"
+                            className="w-full py-2.5 rounded-2xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                           >
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                             <span>{t.markServed}</span>
                           </button>
                         )}
