@@ -1,16 +1,30 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { AppProvider } from '@/context/AppContext';
 
 export const metadata: Metadata = {
-  title: 'MyCashier — Online POS & Table Self-Ordering PWA',
-  description: 'Aplikasi Kasir Online & System Pemesanan Mandiri Dari Meja (Table QR Self-Ordering) Berbasis PWA Terpadu.',
+  title: 'MyCashier — Mobile PWA & POS System',
+  description: 'Aplikasi Kasir Online & Pemesanan Mandiri Dari Meja (Table QR Self-Ordering) Berbasis Real PWA.',
   keywords: ['MyCashier', 'POS Kasir Online', 'Table QR Self-Ordering', 'Aplikasi Kasir Resto', 'PWA', 'Next.js 16'],
   manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'MyCashier',
+  },
   icons: {
     icon: '/icon.jpg',
     apple: '/icon.jpg',
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+  themeColor: '#10b981',
 };
 
 export default function RootLayout({
@@ -19,8 +33,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id" className="dark scroll-smooth">
-      <body className="min-h-screen bg-slate-50 dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 antialiased selection:bg-emerald-500 selection:text-slate-950 transition-colors duration-300">
+    <html lang="id" className="dark scroll-smooth select-none">
+      <body className="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-emerald-500 selection:text-slate-950 touch-manipulation overscroll-none overflow-x-hidden">
         <AppProvider>{children}</AppProvider>
         <script
           dangerouslySetInnerHTML={{
@@ -29,10 +43,10 @@ export default function RootLayout({
                 window.addEventListener('load', function() {
                   navigator.serviceWorker.register('/sw.js').then(
                     function(registration) {
-                      console.log('PWA ServiceWorker registered with scope: ', registration.scope);
+                      console.log('PWA ServiceWorker registered:', registration.scope);
                     },
                     function(err) {
-                      console.log('PWA ServiceWorker registration failed: ', err);
+                      console.log('PWA ServiceWorker failed:', err);
                     }
                   );
                 });
