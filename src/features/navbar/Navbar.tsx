@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import { Smartphone, Monitor, ShieldCheck, Sun, Moon, Globe, QrCode, LogOut, Lock } from 'lucide-react';
@@ -21,12 +22,10 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 select-none shadow-sm">
       <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-        {/* Brand & Logo */}
+        {/* Brand & 3D Logo Icon */}
         <Link href="/" className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 p-0.5 shadow-md shadow-emerald-500/20 flex items-center justify-center text-slate-950 font-extrabold text-sm">
-            <span className="bg-slate-950 text-emerald-400 w-full h-full rounded-[10px] flex items-center justify-center font-black">
-              MC
-            </span>
+          <div className="w-9 h-9 rounded-xl overflow-hidden shadow-md shadow-emerald-500/20 border border-emerald-500/30 flex-shrink-0 relative bg-slate-900">
+            <Image src="/icon.jpg" alt="MyCashier Logo" width={40} height={40} className="object-cover w-full h-full" />
           </div>
           <div>
             <h1 className="font-black text-base md:text-lg text-slate-900 dark:text-white leading-none">
