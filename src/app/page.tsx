@@ -42,7 +42,7 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 relative selection:bg-emerald-500 selection:text-slate-950 pb-16 touch-pan-y overscroll-none overflow-x-hidden">
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 relative selection:bg-emerald-500 selection:text-slate-950 pb-16 overflow-x-hidden overflow-y-auto">
       {/* Standalone Customer PWA Top Bar (Zero Admin/Cashier Links Visible) */}
       <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800/80 px-4 py-3 select-none shadow-xs">
         <div className="max-w-md mx-auto flex items-center justify-between gap-2">

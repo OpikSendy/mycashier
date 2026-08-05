@@ -14,16 +14,22 @@ html.light, html:not(.dark) {
   color: #0f172a;
 }
 
-/* Native Mobile PWA Anti-Zoom & Touch Optimizations */
-html, body {
-  touch-action: pan-x pan-y;
+/* Native Mobile PWA Touch & Scroll Optimizations */
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-width: 100vw;
+}
+
+body {
+  touch-action: manipulation;
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
-  user-select: none;
-  -webkit-user-select: none;
-  overscroll-behavior: contain;
   overflow-x: hidden;
+  overflow-y: auto;
   max-width: 100vw;
+  min-height: 100vh;
   -webkit-overflow-scrolling: touch;
 }
 

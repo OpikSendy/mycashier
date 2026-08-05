@@ -126,8 +126,38 @@ export default function UserPwaApp() {
     { id: 'dessert', label: 'Dessert', icon: Cake, color: 'bg-rose-500/10 text-rose-600' },
   ];
 
+  // Vertical Drag-to-Scroll for Desktop Mouse Users
+  const [isVerticalDragging, setIsVerticalDragging] = useState(false);
+  const [dragStartY, setDragStartY] = useState(0);
+  const [dragScrollTop, setDragScrollTop] = useState(0);
+
+  const handlePageMouseDown = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button, input, select, textarea, a, option, .no-scrollbar')) return;
+    setIsVerticalDragging(true);
+    setDragStartY(e.pageY);
+    setDragScrollTop(window.scrollY || document.documentElement.scrollTop);
+  };
+
+  const handlePageMouseMove = (e: React.MouseEvent) => {
+    if (!isVerticalDragging) return;
+    const deltaY = e.pageY - dragStartY;
+    window.scrollTo({
+      top: dragScrollTop - deltaY,
+      behavior: 'instant',
+    });
+  };
+
+  const handlePageMouseUp = () => setIsVerticalDragging(false);
+
   return (
-    <div className="w-full max-w-md mx-auto px-4 py-4 select-none touch-pan-y pb-28 text-slate-800 dark:text-slate-100">
+    <div
+      onMouseDown={handlePageMouseDown}
+      onMouseMove={handlePageMouseMove}
+      onMouseUp={handlePageMouseUp}
+      onMouseLeave={handlePageMouseUp}
+      className="w-full max-w-md mx-auto px-4 py-4 pb-28 text-slate-800 dark:text-slate-100 cursor-grab active:cursor-grabbing"
+    >
       {/* Friendly Clean Header Banner */}
       <div className="mb-5 p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm relative overflow-hidden">
         <div className="flex items-center justify-between gap-3">

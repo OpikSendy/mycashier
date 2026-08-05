@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 /**
  * PwaZoomLock component
  * Strictly locks browser zooming (pinch gesture zoom, double-tap zoom, gesture zoom Safari iOS, and ctrl+wheel zoom)
- * to provide a seamless native app experience in PWA mode.
+ * while preserving 100% native hardware-accelerated mouse wheel, trackpad, and touch scrolling.
  */
 export default function PwaZoomLock() {
   useEffect(() => {
@@ -13,12 +13,12 @@ export default function PwaZoomLock() {
 
     // 1. Prevent Safari iOS gesture zooming (pinch-to-zoom)
     const handleGesture = (e: Event) => {
-      e.preventDefault();
+      if (e.cancelable) e.preventDefault();
     };
 
     // 2. Prevent multi-touch touchmove zooming (2+ fingers)
     const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches.length > 1) {
+      if (e.touches.length > 1 && e.cancelable) {
         e.preventDefault();
       }
     };
@@ -27,39 +27,40 @@ export default function PwaZoomLock() {
     const handleTouchEnd = (e: TouchEvent) => {
       const now = Date.now();
       const target = e.target as HTMLElement | null;
-      
-      const isInput = target && (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.tagName === 'SELECT' ||
-        target.isContentEditable
-      );
 
-      if (!isInput && now - lastTouchEnd <= 300) {
-        e.preventDefault();
+      const isInput =
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable);
+
+      if (!isInput && now - lastTouchEnd <= 300 && e.cancelable) {
+        // Only prevent default if double tap target is not interactive
+        if (target && !target.closest('button, a, select, input, textarea')) {
+          e.preventDefault();
+        }
       }
       lastTouchEnd = now;
     };
 
-    // 4. Prevent Ctrl + Wheel zoom on desktop/trackpads
+    // 4. Prevent Ctrl + Wheel zoom on desktop/trackpads ONLY when Ctrl key is pressed
     const handleWheel = (e: WheelEvent) => {
-      if (e.ctrlKey) {
+      if (e.ctrlKey && e.cancelable) {
         e.preventDefault();
       }
     };
 
-    // Add passive: false to allow e.preventDefault()
-    const options: AddEventListenerOptions = { passive: false };
-
     // Register gesture listeners (Safari iOS vendor specific)
-    document.addEventListener('gesturestart', handleGesture, options);
-    document.addEventListener('gesturechange', handleGesture, options);
-    document.addEventListener('gestureend', handleGesture, options);
+    const nonPassiveOpts: AddEventListenerOptions = { passive: false };
 
-    // Register touch & wheel listeners
-    document.addEventListener('touchmove', handleTouchMove, options);
-    document.addEventListener('touchend', handleTouchEnd, options);
-    window.addEventListener('wheel', handleWheel, options);
+    document.addEventListener('gesturestart', handleGesture, nonPassiveOpts);
+    document.addEventListener('gesturechange', handleGesture, nonPassiveOpts);
+    document.addEventListener('gestureend', handleGesture, nonPassiveOpts);
+
+    document.addEventListener('touchmove', handleTouchMove, nonPassiveOpts);
+    document.addEventListener('touchend', handleTouchEnd, { passive: true });
+    window.addEventListener('wheel', handleWheel, nonPassiveOpts);
 
     return () => {
       document.removeEventListener('gesturestart', handleGesture);
