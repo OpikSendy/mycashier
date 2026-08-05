@@ -1,9 +1,11 @@
 export interface MenuItem {
   id: string;
   name: string;
+  nameEn?: string;
   category: 'food' | 'drinks' | 'dessert' | 'snack';
   price: number;
   description: string;
+  descriptionEn?: string;
   image: string;
   isAvailable: boolean;
   isPopular?: boolean;
@@ -37,9 +39,11 @@ export const INITIAL_MENU: MenuItem[] = [
   {
     id: 'prod-1',
     name: 'Kopi Susu Gula Aren Premium',
+    nameEn: 'Premium Aren Palm Sugar Milk Coffee',
     category: 'drinks',
     price: 22000,
     description: 'Espresso ganda diseduh dengan susu segar murni dan gula aren organik khas Nusantara.',
+    descriptionEn: 'Double shot espresso brewed with pure fresh milk and authentic organic palm sugar.',
     image: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=600&q=80',
     isAvailable: true,
     isPopular: true,
@@ -47,9 +51,11 @@ export const INITIAL_MENU: MenuItem[] = [
   {
     id: 'prod-2',
     name: 'Nasi Goreng Wagyu Special',
+    nameEn: 'Special Wagyu Beef Fried Rice',
     category: 'food',
     price: 45000,
     description: 'Nasi goreng bumbu rempah spesial dipadu dengan potongan daging Wagyu lembut dan telur mata sapi.',
+    descriptionEn: 'Special spiced fried rice topped with tender Wagyu beef chunks and a sunny-side-up egg.',
     image: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=600&q=80',
     isAvailable: true,
     isPopular: true,
@@ -57,18 +63,22 @@ export const INITIAL_MENU: MenuItem[] = [
   {
     id: 'prod-3',
     name: 'Matcha Cream Latté',
+    nameEn: 'Uji Matcha Cream Latte',
     category: 'drinks',
     price: 28000,
     description: 'Matcha Uji Jepang kelas tinggi dipadu susu oat gurih dan foam krim lembut.',
+    descriptionEn: 'High-grade Japanese Uji matcha paired with creamy oat milk and smooth foam.',
     image: 'https://images.unsplash.com/photo-1536256263959-770b48d82b0a?auto=format&fit=crop&w=600&q=80',
     isAvailable: true,
   },
   {
     id: 'prod-4',
     name: 'Beef Teriyaki Rice Bowl',
+    nameEn: 'Imported Beef Teriyaki Rice Bowl',
     category: 'food',
     price: 38000,
     description: 'Irisan daging sapi impor ditumis dengan saus Teriyaki otentik di atas nasi hangat pulen.',
+    descriptionEn: 'Sliced imported beef sautéed in authentic Teriyaki sauce served over warm fluffy rice.',
     image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80',
     isAvailable: true,
     isPopular: true,
@@ -76,18 +86,22 @@ export const INITIAL_MENU: MenuItem[] = [
   {
     id: 'prod-5',
     name: 'Croissant Butter Truffle',
+    nameEn: 'Truffle Butter French Croissant',
     category: 'snack',
     price: 25000,
     description: 'Pastry khas Prancis berlapis mentega panggang renyah di luar, lembut berlapis di dalam.',
+    descriptionEn: 'Classic French butter croissant baked crispy on the outside, flaky and soft inside.',
     image: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=600&q=80',
     isAvailable: true,
   },
   {
     id: 'prod-6',
     name: 'Biscoff Lotus Cheese Cake',
+    nameEn: 'Lotus Biscoff Baked Cheesecake',
     category: 'dessert',
     price: 32000,
     description: 'Kue keju panggang lezat ditaburi remahan biskuit Lotus Biscoff dan lelehan caramel.',
+    descriptionEn: 'Delicious baked cheesecake topped with crunchy Lotus Biscoff crumbs and caramel drizzle.',
     image: 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&w=600&q=80',
     isAvailable: true,
     isPopular: true,
@@ -95,18 +109,22 @@ export const INITIAL_MENU: MenuItem[] = [
   {
     id: 'prod-7',
     name: 'Iced Lemon Tea Sparkle',
+    nameEn: 'Sparkling Iced Lemon Tea',
     category: 'drinks',
     price: 18000,
-    description: 'Teh lemon segar disajikan dingin dengan es dan sentuhan soda soda menyegarkan.',
+    description: 'Teh lemon segar disajikan dingin dengan es dan sentuhan soda menyegarkan.',
+    descriptionEn: 'Fresh brewed lemon tea served ice-cold with a splash of refreshing sparkling soda.',
     image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=600&q=80',
     isAvailable: true,
   },
   {
     id: 'prod-8',
     name: 'French Fries Truffle Oil',
+    nameEn: 'Truffle Oil & Parmesan French Fries',
     category: 'snack',
     price: 24000,
-    description: 'Kentang goreng renyah ditaburi garam laut, keju parmesan, dan aroma aroma truffle.',
+    description: 'Kentang goreng renyah ditaburi garam laut, keju parmesan, dan aroma truffle.',
+    descriptionEn: 'Crispy golden french fries tossed with sea salt, parmesan cheese, and truffle aroma.',
     image: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=600&q=80',
     isAvailable: true,
   },

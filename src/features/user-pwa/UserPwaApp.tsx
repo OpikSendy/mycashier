@@ -22,6 +22,7 @@ import {
   ChefHat,
   Clock,
   ChevronRight,
+  Lock,
 } from 'lucide-react';
 import Image from 'next/image';
 import TablePickerSelect from '@/components/common/TablePickerSelect';
@@ -47,6 +48,28 @@ export default function UserPwaApp() {
   const [customerName, setCustomerName] = useState('');
   const [selectedItemForNotes, setSelectedItemForNotes] = useState<MenuItem | null>(null);
   const [itemNotes, setItemNotes] = useState('');
+
+  // Table Lock via QR Scan URL Query Param (?table=Meja%2004 or ?table=04)
+  const [isTableLocked, setIsTableLocked] = useState<boolean>(false);
+
+  React.useEffect(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const tableParam = params.get('table');
+        if (tableParam) {
+          let formatted = tableParam.trim();
+          if (/^\d+$/.test(formatted)) {
+            formatted = `Meja ${formatted.padStart(2, '0')}`;
+          } else if (!formatted.toLowerCase().startsWith('meja')) {
+            formatted = `Meja ${formatted}`;
+          }
+          setSelectedTable(formatted);
+          setIsTableLocked(true);
+        }
+      }
+    } catch (e) {}
+  }, [setSelectedTable]);
 
   // Mouse Drag to Scroll Handler for Category Chips
   const categoryScrollRef = useRef<HTMLDivElement>(null);
@@ -176,11 +199,18 @@ export default function UserPwaApp() {
             </div>
           </div>
 
-          <TablePickerSelect
-            value={selectedTable}
-            onChange={setSelectedTable}
-            options={tables}
-          />
+          {isTableLocked ? (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-black shadow-2xs">
+              <Lock className="w-3.5 h-3.5" />
+              <span>{selectedTable} ({language === 'ID' ? 'Terkunci QR' : 'QR Locked'})</span>
+            </div>
+          ) : (
+            <TablePickerSelect
+              value={selectedTable}
+              onChange={setSelectedTable}
+              options={tables}
+            />
+          )}
         </div>
       </div>
 
