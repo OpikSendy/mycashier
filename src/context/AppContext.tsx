@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { MenuItem, Order, INITIAL_MENU, INITIAL_ORDERS, OrderStatus, PaymentMethod } from '@/data/initialData';
 
-export type UserRole = 'user_pwa' | 'cashier_pos' | 'admin_cms';
+export type UserRole = 'customer' | 'cashier' | 'admin';
 export type Theme = 'dark' | 'light';
 export type Language = 'ID' | 'EN';
 
@@ -14,8 +14,9 @@ export interface CartItem {
 }
 
 interface AppContextType {
-  activeRole: UserRole;
-  setActiveRole: (role: UserRole) => void;
+  authRole: UserRole;
+  loginAs: (role: UserRole, pin: string) => boolean;
+  logout: () => void;
   theme: Theme;
   toggleTheme: () => void;
   language: Language;
@@ -38,8 +39,14 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+// Demo PIN credentials for RBAC
+export const ROLE_PINS = {
+  cashier: '1234',
+  admin: '8888',
+};
+
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [activeRole, setActiveRoleState] = useState<UserRole>('user_pwa');
+  const [authRole, setAuthRole] = useState<UserRole>('customer');
   const [theme, setTheme] = useState<Theme>('dark');
   const [language, setLanguageState] = useState<Language>('ID');
   const [selectedTable, setSelectedTable] = useState<string>('Meja 04');
@@ -50,10 +57,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setMounted(true);
-    const savedRole = localStorage.getItem('mycashier_role') as UserRole;
+    const savedRole = localStorage.getItem('mycashier_auth_role') as UserRole;
     const savedTheme = localStorage.getItem('mycashier_theme') as Theme;
     const savedLang = localStorage.getItem('mycashier_lang') as Language;
-    if (savedRole) setActiveRoleState(savedRole);
+    if (savedRole) setAuthRole(savedRole);
     if (savedTheme) setTheme(savedTheme);
     if (savedLang) setLanguageState(savedLang);
   }, []);
@@ -71,16 +78,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('mycashier_theme', theme);
   }, [theme, mounted]);
 
-  const setActiveRole = (role: UserRole) => {
-    if (typeof document !== 'undefined' && 'startViewTransition' in document) {
-      // @ts-ignore
-      document.startViewTransition(() => {
-        setActiveRoleState(role);
-      });
-    } else {
-      setActiveRoleState(role);
+  const loginAs = (role: UserRole, pin: string): boolean => {
+    if (role === 'customer') {
+      setAuthRole('customer');
+      localStorage.setItem('mycashier_auth_role', 'customer');
+      return true;
     }
-    localStorage.setItem('mycashier_role', role);
+
+    const validPin = ROLE_PINS[role as 'cashier' | 'admin'];
+    if (pin === validPin) {
+      setAuthRole(role);
+      localStorage.setItem('mycashier_auth_role', role);
+      return true;
+    }
+    return false;
+  };
+
+  const logout = () => {
+    setAuthRole('customer');
+    localStorage.setItem('mycashier_auth_role', 'customer');
   };
 
   const toggleTheme = () => {
@@ -204,8 +220,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   return (
     <AppContext.Provider
       value={{
-        activeRole,
-        setActiveRole,
+        authRole,
+        loginAs,
+        logout,
         theme,
         toggleTheme,
         language,

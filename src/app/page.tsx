@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Navbar from '@/features/navbar/Navbar';
-import BottomNav from '@/features/navbar/BottomNav';
 import OnboardingView from '@/features/onboarding/OnboardingView';
 import UserPwaApp from '@/features/user-pwa/UserPwaApp';
 import AiChatWidget from '@/features/ai-assistant/AiChatWidget';
@@ -30,16 +29,12 @@ export default function Home() {
     setShowOnboarding(false);
   };
 
-  const handleRestartOnboarding = () => {
-    setShowOnboarding(true);
-  };
-
   if (showOnboarding === true) {
     return <OnboardingView onComplete={handleFinishOnboarding} />;
   }
 
   return (
-    <main className="min-h-screen relative selection:bg-emerald-500 selection:text-slate-950 pb-16">
+    <main className="min-h-screen relative selection:bg-emerald-500 selection:text-slate-950 pb-12">
       {/* Navigation Header */}
       <Navbar />
 
@@ -48,9 +43,6 @@ export default function Home() {
 
       {/* Floating Ask MyCashier AI Assistant */}
       <AiChatWidget />
-
-      {/* PWA Mobile Bottom Navigation Bar */}
-      <BottomNav onRestartOnboarding={handleRestartOnboarding} />
     </main>
   );
 }

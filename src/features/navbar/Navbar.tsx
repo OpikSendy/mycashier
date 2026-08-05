@@ -4,18 +4,18 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
-import { Smartphone, Monitor, ShieldCheck, Sun, Moon, Globe, QrCode } from 'lucide-react';
+import { Smartphone, Monitor, ShieldCheck, Sun, Moon, Globe, QrCode, LogOut, Lock } from 'lucide-react';
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { theme, toggleTheme, language, toggleLanguage, selectedTable, setSelectedTable } = useApp();
+  const { authRole, logout, theme, toggleTheme, language, toggleLanguage, selectedTable, setSelectedTable } = useApp();
 
   const tables = Array.from({ length: 12 }, (_, i) => `Meja ${String(i + 1).padStart(2, '0')}`);
 
   const navLinks = [
-    { href: '/', label: 'User Mobile PWA', path: '/', icon: <Smartphone className="w-4 h-4" /> },
-    { href: '/cashier', label: 'Kasir POS Station', path: '/cashier', icon: <Monitor className="w-4 h-4" /> },
-    { href: '/admin', label: 'Admin CMS Master', path: '/admin', icon: <ShieldCheck className="w-4 h-4" /> },
+    { href: '/', label: 'User PWA', path: '/', icon: <Smartphone className="w-4 h-4" /> },
+    { href: '/cashier', label: 'Kasir POS', path: '/cashier', icon: <Monitor className="w-4 h-4" /> },
+    { href: '/admin', label: 'Admin CMS', path: '/admin', icon: <ShieldCheck className="w-4 h-4" /> },
   ];
 
   return (
@@ -33,15 +33,16 @@ export default function Navbar() {
               My<span className="text-emerald-500 dark:text-emerald-400">Cashier</span>
             </h1>
             <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold tracking-wide">
-              MULTI-ROUTE F&B PLATFORM
+              RBAC PROTECTED SYSTEM
             </p>
           </div>
         </Link>
 
-        {/* Real Next.js Route Navigation Links */}
+        {/* Next.js Route Navigation Links */}
         <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
           {navLinks.map((link) => {
             const isActive = pathname === link.path;
+            const isProtected = link.path !== '/' && authRole !== link.path.replace('/', '');
             return (
               <Link
                 key={link.href}
@@ -54,6 +55,11 @@ export default function Navbar() {
               >
                 {link.icon}
                 <span className="hidden sm:inline">{link.label}</span>
+                {isProtected && (
+                  <span title="Perlu PIN Access">
+                    <Lock className="w-3 h-3 text-amber-500 flex-shrink-0" />
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -77,6 +83,18 @@ export default function Navbar() {
                 ))}
               </select>
             </div>
+          )}
+
+          {/* Session Logout Button */}
+          {authRole !== 'customer' && (
+            <button
+              onClick={logout}
+              className="px-2.5 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/20 text-xs font-bold flex items-center gap-1 transition-colors"
+              title="Keluar Sesi Role"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Keluar ({authRole})</span>
+            </button>
           )}
 
           {/* Language Switcher */}
