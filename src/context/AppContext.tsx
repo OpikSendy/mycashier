@@ -47,7 +47,7 @@ export const ROLE_PINS = {
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [authRole, setAuthRole] = useState<UserRole>('customer');
-  const [theme, setTheme] = useState<Theme>('dark');
+  const [theme, setTheme] = useState<Theme>('light');
   const [language, setLanguageState] = useState<Language>('ID');
   const [selectedTable, setSelectedTable] = useState<string>('Meja 04');
   const [cart, setCart] = useState<CartItem[]>([]);

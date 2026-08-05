@@ -36,8 +36,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id" className="dark scroll-smooth select-none">
-      <body className="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-emerald-500 selection:text-slate-950 touch-manipulation overscroll-none overflow-x-hidden">
+    <html lang="id" className="scroll-smooth">
+      <body className="min-h-screen bg-slate-50 text-slate-800 antialiased selection:bg-emerald-500 selection:text-slate-950 overflow-x-hidden overflow-y-auto">
         <PwaZoomLock />
         <QueryProvider>
           <AppProvider>
