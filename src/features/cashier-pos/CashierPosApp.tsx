@@ -203,6 +203,18 @@ export default function CashierPosApp() {
                         Stok Habis
                       </div>
                     )}
+                    {/* Sub-category badge overlay — top-right, frosted glass (konsisten dengan PWA) */}
+                    {item.subCategory && item.isAvailable && (
+                      <span className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-slate-950/65 backdrop-blur-sm text-white text-[7px] font-black shadow-xs leading-none truncate max-w-[60px] pointer-events-none">
+                        {item.subCategory}
+                      </span>
+                    )}
+                    {/* Popular badge — top-left, amber */}
+                    {item.isPopular && (
+                      <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-amber-400 text-slate-950 text-[7px] font-black shadow-xs leading-none pointer-events-none">
+                        Top
+                      </span>
+                    )}
                   </div>
                   <h4 className="text-xs font-extrabold text-slate-900 dark:text-white line-clamp-1">
                     {language === 'EN' && item.nameEn ? item.nameEn : item.name}

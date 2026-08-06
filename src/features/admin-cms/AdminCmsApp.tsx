@@ -368,19 +368,28 @@ export default function AdminCmsApp() {
                 value={subCategory}
                 onChange={(e) => setSubCategory(e.target.value)}
                 placeholder="Contoh: Coffee, Rice Bowl, Pastry..."
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs focus:outline-none focus:border-emerald-500 mb-1.5"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs focus:outline-none focus:border-emerald-500 mb-2"
               />
-              <div className="flex flex-wrap gap-1">
-                {['Coffee', 'Non-Coffee', 'Rice Bowl & Nasi', 'Pastry & Bakery', 'Cakes & Sweets', 'Tea & Sparkle', 'Finger Food'].map((sc) => (
-                  <button
-                    key={sc}
-                    type="button"
-                    onClick={() => setSubCategory(sc)}
-                    className="px-2 py-0.5 rounded-lg bg-slate-200 dark:bg-slate-700 text-[10px] font-bold text-slate-700 dark:text-slate-300 hover:bg-emerald-500 hover:text-white transition-colors cursor-pointer"
-                  >
-                    +{sc}
-                  </button>
-                ))}
+              {/* Preset chips dengan selected-state toggle emerald */}
+              <div className="flex flex-wrap gap-1.5">
+                {['Coffee', 'Non-Coffee', 'Rice Bowl & Nasi', 'Pastry & Bakery', 'Cakes & Sweets', 'Tea & Sparkle', 'Finger Food'].map((sc) => {
+                  const isSelected = subCategory === sc;
+                  return (
+                    <button
+                      key={sc}
+                      type="button"
+                      onClick={() => setSubCategory(isSelected ? '' : sc)}
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-500/30 scale-105'
+                          : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
+                      }`}
+                    >
+                      {isSelected && <span className="text-[9px] font-black">✓</span>}
+                      <span>{sc}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
