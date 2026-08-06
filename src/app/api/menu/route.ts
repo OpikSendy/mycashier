@@ -1,26 +1,80 @@
-import { NextResponse } from 'next/server';
-import { cacheEngine, CACHE_KEYS } from '@/lib/redis';
+import { NextRequest, NextResponse } from 'next/server';
+import { getDb, isDbConfigured } from '@/lib/db';
 import { INITIAL_MENU } from '@/data/initialData';
 
+/**
+ * GET /api/menu
+ * Returns all menu items. Falls back to INITIAL_MENU if DB not configured.
+ */
 export async function GET() {
+  if (!isDbConfigured()) {
+    return NextResponse.json({ source: 'fallback', data: INITIAL_MENU });
+  }
+
   try {
-    // 1. Check Redis Cache
-    const cachedMenu = await cacheEngine.get(CACHE_KEYS.MENU_CATALOG);
-    if (cachedMenu) {
-      return NextResponse.json({
-        source: 'redis_cache',
-        data: JSON.parse(cachedMenu),
-      });
+    const sql = getDb();
+    const rows = await sql`
+      SELECT
+        id, name, name_en AS "nameEn", category,
+        sub_category AS "subCategory", variant_preset AS "variantPreset",
+        price, description, description_en AS "descriptionEn",
+        image, is_available AS "isAvailable", is_popular AS "isPopular"
+      FROM menus
+      ORDER BY created_at ASC
+    `;
+    return NextResponse.json({ source: 'database', data: rows });
+  } catch (error: any) {
+    console.error('[GET /api/menu] DB error, falling back:', error.message);
+    return NextResponse.json({ source: 'fallback', data: INITIAL_MENU });
+  }
+}
+
+/**
+ * POST /api/menu
+ * Creates a new menu item.
+ * Body: Omit<MenuItem, 'id'>
+ */
+export async function POST(req: NextRequest) {
+  if (!isDbConfigured()) {
+    return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
+  }
+
+  try {
+    const body = await req.json();
+    const {
+      name, nameEn, category, subCategory, variantPreset,
+      price, description, descriptionEn, image, isAvailable, isPopular,
+    } = body;
+
+    if (!name || !price || !category) {
+      return NextResponse.json({ error: 'name, price, category are required' }, { status: 400 });
     }
 
-    // 2. Fallback to Initial Database & Store in Redis for 5 Minutes
-    await cacheEngine.set(CACHE_KEYS.MENU_CATALOG, JSON.stringify(INITIAL_MENU), 'EX', 300);
+    const sql = getDb();
+    const id = `prod-${Date.now()}`;
 
-    return NextResponse.json({
-      source: 'database',
-      data: INITIAL_MENU,
-    });
+    const rows = (await sql`
+      INSERT INTO menus (
+        id, name, name_en, category, sub_category, variant_preset,
+        price, description, description_en, image, is_available, is_popular
+      ) VALUES (
+        ${id}, ${name}, ${nameEn ?? null}, ${category},
+        ${subCategory ?? null}, ${variantPreset ?? 'none'},
+        ${price}, ${description ?? ''}, ${descriptionEn ?? null},
+        ${image ?? 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80'},
+        ${isAvailable ?? true}, ${isPopular ?? false}
+      )
+      RETURNING
+        id, name, name_en AS "nameEn", category,
+        sub_category AS "subCategory", variant_preset AS "variantPreset",
+        price, description, description_en AS "descriptionEn",
+        image, is_available AS "isAvailable", is_popular AS "isPopular"
+    `) as any[];
+    const row = rows[0];
+
+    return NextResponse.json({ data: row }, { status: 201 });
   } catch (error: any) {
-    return NextResponse.json({ source: 'error_fallback', data: INITIAL_MENU });
+    console.error('[POST /api/menu]', error.message);
+    return NextResponse.json({ error: 'Failed to create menu item' }, { status: 500 });
   }
 }
