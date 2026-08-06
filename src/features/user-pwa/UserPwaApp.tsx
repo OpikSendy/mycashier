@@ -357,6 +357,71 @@ export default function UserPwaApp() {
             </div>
           )}
 
+          {/* ─── SUB-CATEGORY ACTIVE: Premium Filtered Section View ─── */}
+          {activeSubCategory !== 'all' && (() => {
+            const subCatItems = searchFilteredMenu.filter((i) => i.subCategory === activeSubCategory);
+            return (
+              <section className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                {/* Premium gradient sub-category header */}
+                <div className="relative overflow-hidden rounded-3xl p-4 bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-cyan-500/10 dark:from-emerald-900/30 dark:via-teal-900/20 dark:to-cyan-900/20 border border-emerald-500/20 dark:border-emerald-700/30 shadow-sm">
+                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-400/10 via-transparent to-transparent pointer-events-none" />
+                  <div className="flex items-center justify-between relative z-10">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 rounded-2xl bg-emerald-500/15 dark:bg-emerald-500/20 border border-emerald-500/25 backdrop-blur-sm">
+                        <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 opacity-80">
+                          {language === 'ID' ? 'Sub-Kategori Aktif' : 'Active Sub-Category'}
+                        </p>
+                        <h3 className="text-sm font-black text-slate-900 dark:text-white leading-tight">
+                          {activeSubCategory}
+                        </h3>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+                        {subCatItems.length} {language === 'ID' ? 'menu' : 'items'}
+                      </span>
+                      <button
+                        onClick={() => setActiveSubCategory('all')}
+                        className="p-1.5 rounded-xl bg-slate-900/10 dark:bg-white/10 hover:bg-slate-900/20 text-slate-600 dark:text-slate-400 transition-all cursor-pointer"
+                        title="Hapus filter"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {subCatItems.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-3">
+                    {subCatItems.map((item) => (
+                      <MenuItemCard
+                        key={`subcat-${item.id}`}
+                        item={item}
+                        quantity={getItemCartQuantity(item.id)}
+                        language={language}
+                        onAdd={() => setSelectedItemForNotes(item)}
+                        onUpdateQuantity={(delta) => updateCartQuantity(item.id, delta)}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-8 text-center rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                    <ChefHat className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                    <p className="text-xs font-bold text-slate-500">
+                      {language === 'ID' ? `Tidak ada menu untuk "${activeSubCategory}"` : `No items for "${activeSubCategory}"`}
+                    </p>
+                  </div>
+                )}
+              </section>
+            );
+          })()}
+
+          {/* ─── DEFAULT: Per-Category Sections (hanya tampil saat tidak ada sub-cat filter aktif) ─── */}
+          {activeSubCategory === 'all' && (
+            <>
           {/* CATEGORY SECTION 1: TOP PICKS / REKOMENDASI */}
           {(activeCategory === 'all' || activeCategory === 'food') && popularMenu.length > 0 && !searchQuery && (
             <section className="space-y-3">
@@ -550,6 +615,8 @@ export default function UserPwaApp() {
                 Reset Pencarian
               </button>
             </div>
+          )}
+            </>
           )}
         </div>
       )}
@@ -1073,9 +1140,15 @@ function MenuItemCard({ item, quantity, language, onAdd, onUpdateQuantity }: Men
             height={70}
             className="object-cover w-full h-full"
           />
+          {/* Badge overlay: sub-category (top-right) & popular (top-left) */}
           {item.isPopular && (
-            <span className="absolute top-1 left-1 px-1.5 py-0.2 rounded-md bg-amber-400 text-slate-950 text-[8px] font-black shadow-xs">
+            <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-amber-400 text-slate-950 text-[8px] font-black shadow-xs leading-none">
               Top
+            </span>
+          )}
+          {item.subCategory && (
+            <span className="absolute top-1 right-1 px-1.5 py-0.5 rounded-md bg-slate-950/70 backdrop-blur-sm text-white text-[7px] font-black shadow-xs leading-none truncate max-w-[52px]">
+              {item.subCategory}
             </span>
           )}
         </div>
@@ -1091,11 +1164,6 @@ function MenuItemCard({ item, quantity, language, onAdd, onUpdateQuantity }: Men
             <div className="text-emerald-600 dark:text-emerald-400 text-xs font-black">
               Rp {item.price.toLocaleString('id-ID')}
             </div>
-            {item.subCategory && (
-              <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/80 dark:border-slate-700">
-                {item.subCategory}
-              </span>
-            )}
           </div>
         </div>
       </div>
