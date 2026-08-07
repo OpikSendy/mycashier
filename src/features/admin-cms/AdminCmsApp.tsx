@@ -41,6 +41,7 @@ import {
   PieChart as PieIcon,
   BarChart3,
   Award,
+  Download,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -292,6 +293,30 @@ export default function AdminCmsApp() {
 
   const inputCls = 'w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500 border border-transparent focus:border-emerald-500 transition-all';
   const labelCls = 'block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1';
+
+  const handleExportCsv = () => {
+    if (orders.length === 0) return;
+    const headers = ['ID Transaksi', 'No. Meja', 'Nama Pelanggan', 'Total (Rp)', 'Status Pembayaran', 'Metode Bayar', 'Status Pesanan', 'Waktu', 'Rincian Menu'];
+    const rows = orders.map((o) => [
+      o.id,
+      o.tableNumber,
+      `"${o.customerName.replace(/"/g, '""')}"`,
+      o.totalAmount,
+      o.paymentStatus,
+      o.paymentMethod,
+      o.status,
+      o.createdAt,
+      `"${o.items.map((i) => `${i.quantity}x ${i.productName}`).join('; ').replace(/"/g, '""')}"`,
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `Laporan_Transaksi_MyCashier_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="py-6 px-4 max-w-7xl mx-auto select-none pb-24 text-slate-800 dark:text-slate-100">
@@ -640,7 +665,23 @@ export default function AdminCmsApp() {
 
       {/* TAB 4: MASTER ORDERS LOG */}
       {activeTab === 'orders_log' && (
-        <div className="space-y-3">
+        <div className="space-y-4">
+          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between shadow-sm">
+            <div>
+              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Riwayat Semua Pesanan ({orders.length})</h3>
+              <p className="text-[10px] text-slate-400">Unduh data laporan transaksi dalam format file CSV / Excel</p>
+            </div>
+
+            <button
+              onClick={handleExportCsv}
+              disabled={orders.length === 0}
+              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-emerald-500/20 active:scale-95 transition-all cursor-pointer"
+            >
+              <Download className="w-4 h-4" />
+              <span>Export CSV Laporan</span>
+            </button>
+          </div>
+
           {orders.length === 0 ? (
             <div className="py-16 text-center text-slate-400 text-xs">Belum ada transaksi.</div>
           ) : (
