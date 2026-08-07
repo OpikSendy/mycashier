@@ -6,10 +6,28 @@ import PwaZoomLock from '@/components/pwa/PwaZoomLock';
 import PwaInstallBanner from '@/components/pwa/PwaInstallBanner';
 
 export const metadata: Metadata = {
-  title: 'MyCashier — Mobile PWA & POS System',
-  description: 'Aplikasi Kasir Online & Pemesanan Mandiri Dari Meja (Table QR Self-Ordering) Berbasis Real PWA.',
-  keywords: ['MyCashier', 'POS Kasir Online', 'Table QR Self-Ordering', 'Aplikasi Kasir Resto', 'PWA', 'Next.js 16', 'React Query', 'Redis'],
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://mycashier-five.vercel.app'),
+  title: {
+    default: 'MyCashier — Online POS & Table QR Self-Ordering PWA',
+    template: '%s | MyCashier Resto',
+  },
+  description: 'Aplikasi Kasir Online & Pemesanan Mandiri Dari Meja (Table QR Self-Ordering PWA) dengan KDS Antrean Dapur & Analytics Recharts.',
+  keywords: ['MyCashier', 'POS Kasir Online', 'Table QR Self-Ordering', 'Aplikasi Kasir Resto', 'PWA', 'Next.js 16', 'React 19', 'PostgreSQL Neon'],
   manifest: '/manifest.json',
+  openGraph: {
+    title: 'MyCashier — Online POS & Table QR Self-Ordering PWA',
+    description: 'Aplikasi POS & Self-Ordering Restoran modern dengan KDS Dapur real-time & PostgreSQL Neon.',
+    siteName: 'MyCashier Resto',
+    images: [{ url: '/icon.jpg', width: 512, height: 512, alt: 'MyCashier Logo' }],
+    locale: 'id_ID',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'MyCashier — POS Resto PWA',
+    description: 'Online POS & Table Self-Ordering PWA System',
+    images: ['/icon.jpg'],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
