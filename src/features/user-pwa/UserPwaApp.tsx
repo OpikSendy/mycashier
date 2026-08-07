@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import TablePickerSelect from '@/components/common/TablePickerSelect';
+import { ProductCardSkeleton } from '@/components/ui/SkeletonCard';
 
 export default function UserPwaApp() {
   const {
@@ -34,6 +35,7 @@ export default function UserPwaApp() {
     selectedTable,
     setSelectedTable,
     menu,
+    menuLoading,
     cart,
     addToCart,
     updateCartQuantity,
@@ -357,8 +359,17 @@ export default function UserPwaApp() {
             </div>
           )}
 
+          {/* Skeleton Loading State */}
+          {menuLoading && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
+            </div>
+          )}
+
           {/* ─── SUB-CATEGORY ACTIVE: Premium Filtered Section View ─── */}
-          {activeSubCategory !== 'all' && (() => {
+          {!menuLoading && activeSubCategory !== 'all' && (() => {
             const subCatItems = searchFilteredMenu.filter((i) => i.subCategory === activeSubCategory);
             return (
               <section className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
