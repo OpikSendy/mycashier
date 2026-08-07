@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { TRANSLATIONS } from '@/data/translations';
 import { Order, PaymentMethod, MenuItem } from '@/data/initialData';
@@ -24,11 +24,14 @@ import {
   Coffee,
   Cookie,
   Cake,
+  Bell,
 } from 'lucide-react';
 import Image from 'next/image';
+import { useOrderNotification } from '@/hooks/useOrderNotification';
 
 export default function CashierPosApp() {
   const { language, menu, orders, cart, addToCart, updateCartQuantity, clearCart, createOrder, markOrderPaid } = useApp();
+  const { permission, requestPermission, sendNotification } = useOrderNotification();
   const t = TRANSLATIONS[language].cashier;
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -41,6 +44,18 @@ export default function CashierPosApp() {
   const [customerNameInput, setCustomerNameInput] = useState('');
 
   const unpaidOrders = orders.filter((o) => o.paymentStatus === 'UNPAID');
+
+  // Trigger web push notification when unpaid orders change
+  const [prevUnpaidCount, setPrevUnpaidCount] = useState(unpaidOrders.length);
+  useEffect(() => {
+    if (unpaidOrders.length > prevUnpaidCount) {
+      const latestOrder = unpaidOrders[0];
+      sendNotification(`🔔 Pesanan ${latestOrder?.tableNumber || 'Baru'} Masuk!`, {
+        body: `${latestOrder?.customerName || 'Pelanggan'} • Total: Rp ${latestOrder?.totalAmount.toLocaleString('id-ID')}`,
+      });
+    }
+    setPrevUnpaidCount(unpaidOrders.length);
+  }, [unpaidOrders.length, prevUnpaidCount, unpaidOrders, sendNotification]);
 
   const availableSubCategories = Array.from(
     new Set(
@@ -328,6 +343,16 @@ export default function CashierPosApp() {
                 <AlertCircle className="w-4 h-4 text-amber-500" />
                 <span>Antrean Tagihan Meja Belum Lunas ({unpaidOrders.length})</span>
               </h3>
+              {permission !== 'granted' && (
+                <button
+                  onClick={requestPermission}
+                  className="px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[10px] font-bold flex items-center gap-1 hover:bg-amber-500/20 cursor-pointer transition-all"
+                  title="Aktifkan Notifikasi Web Browser"
+                >
+                  <Bell className="w-3 h-3 text-amber-500" />
+                  <span>Aktifkan Notif</span>
+                </button>
+              )}
             </div>
 
             {unpaidOrders.length === 0 ? (
