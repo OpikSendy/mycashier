@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import OnboardingView from '@/features/onboarding/OnboardingView';
 import UserPwaApp from '@/features/user-pwa/UserPwaApp';
+import ErrorBoundary from '@/components/ui/ErrorBoundary';
 import AiChatWidget from '@/features/ai-assistant/AiChatWidget';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -43,7 +44,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 relative selection:bg-emerald-500 selection:text-slate-950 pb-4 overflow-x-hidden overflow-y-auto">
-      {/* Standalone Customer PWA Top Bar (Zero Admin/Cashier Links Visible) */}
+      {/* Standalone Customer PWA Top Bar */}
       <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800/80 px-4 py-3 select-none shadow-xs">
         <div className="max-w-md mx-auto flex items-center justify-between gap-2">
           {/* Brand Logo */}
@@ -86,7 +87,9 @@ export default function Home() {
       </header>
 
       {/* Customer Mobile PWA Application */}
-      <UserPwaApp />
+      <ErrorBoundary fallbackTitle="Kendala Aplikasi Pemesanan Mandiri">
+        <UserPwaApp />
+      </ErrorBoundary>
 
       {/* Native App Bottom Spacer */}
       <footer className="text-center py-6 text-[11px] font-bold text-slate-400">
