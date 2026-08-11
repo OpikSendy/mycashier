@@ -21,6 +21,19 @@ export interface StoreSettings {
   taxRate: number; // percentage e.g. 10 = 10%
 }
 
+export interface Branch {
+  id: string;
+  name: string;
+  city: string;
+  address: string;
+}
+
+export const INITIAL_BRANCHES: Branch[] = [
+  { id: 'b-1', name: 'Cabang Jakarta Pusat', city: 'Jakarta', address: 'Grand Indonesia Mall, Lt. 3' },
+  { id: 'b-2', name: 'Cabang Bandung Dago', city: 'Bandung', address: 'Jl. Ir. H. Juanda No. 88, Dago' },
+  { id: 'b-3', name: 'Cabang Bali Seminyak', city: 'Bali', address: 'Jl. Kayu Aya No. 12, Seminyak' },
+];
+
 interface AppContextType {
   authRole: UserRole;
   loginAs: (role: UserRole, pin: string) => boolean;
@@ -31,6 +44,10 @@ interface AppContextType {
   toggleLanguage: () => void;
   selectedTable: string;
   setSelectedTable: (table: string) => void;
+  // Branch Switching
+  branches: Branch[];
+  activeBranch: Branch;
+  setActiveBranch: (branch: Branch) => void;
   cart: CartItem[];
   addToCart: (item: MenuItem, notes?: string) => void;
   updateCartQuantity: (itemId: string, delta: number) => void;
@@ -75,6 +92,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>('light');
   const [language, setLanguageState] = useState<Language>('ID');
   const [selectedTable, setSelectedTable] = useState<string>('Meja 04');
+  const [activeBranch, setActiveBranch] = useState<Branch>(INITIAL_BRANCHES[0]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [mounted, setMounted] = useState(false);
 
@@ -455,6 +473,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         toggleLanguage,
         selectedTable,
         setSelectedTable,
+        branches: INITIAL_BRANCHES,
+        activeBranch,
+        setActiveBranch,
         cart,
         addToCart,
         updateCartQuantity,

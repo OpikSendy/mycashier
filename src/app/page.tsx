@@ -8,13 +8,13 @@ import AiChatWidget from '@/features/ai-assistant/AiChatWidget';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useApp } from '@/context/AppContext';
-import { QrCode, Globe, Sun, Moon, Lock } from 'lucide-react';
+import { QrCode, Globe, Sun, Moon, Lock, MapPin } from 'lucide-react';
 
 import PwaInstallButton from '@/components/pwa/PwaInstallButton';
 
 export default function Home() {
   const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
-  const { theme, toggleTheme, language, toggleLanguage, selectedTable, setSelectedTable } = useApp();
+  const { theme, toggleTheme, language, toggleLanguage, selectedTable, setSelectedTable, branches, activeBranch, setActiveBranch } = useApp();
 
   const tables = Array.from({ length: 12 }, (_, i) => `Meja ${String(i + 1).padStart(2, '0')}`);
 
@@ -47,8 +47,8 @@ export default function Home() {
       {/* Standalone Customer PWA Top Bar */}
       <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800/80 px-4 py-3 select-none shadow-xs">
         <div className="max-w-md mx-auto flex items-center justify-between gap-2">
-          {/* Brand Logo */}
-          <div className="flex items-center gap-2.5">
+          {/* Brand Logo & Active Branch Selector */}
+          <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl overflow-hidden shadow-sm border border-emerald-500/30 flex-shrink-0 relative bg-slate-900">
               <Image src="/icon.jpg" alt="MyCashier Logo" width={32} height={32} className="object-cover w-full h-full" />
             </div>
@@ -56,9 +56,22 @@ export default function Home() {
               <h1 className="font-black text-base text-slate-900 dark:text-white leading-none">
                 My<span className="text-emerald-600 dark:text-emerald-400">Cashier</span>
               </h1>
-              <p className="text-[9px] text-slate-500 dark:text-slate-400 font-bold tracking-wider uppercase">
-                Self-Ordering PWA
-              </p>
+              <div className="relative mt-0.5">
+                <select
+                  value={activeBranch.id}
+                  onChange={(e) => {
+                    const found = branches.find((b) => b.id === e.target.value);
+                    if (found) setActiveBranch(found);
+                  }}
+                  className="bg-transparent text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider focus:outline-none cursor-pointer pr-3"
+                >
+                  {branches.map((b) => (
+                    <option key={b.id} value={b.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                      📍 {b.name} ({b.city})
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
