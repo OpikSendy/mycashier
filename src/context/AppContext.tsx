@@ -168,6 +168,44 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     fetchMenu();
     fetchOrders();
     fetchStoreSettings();
+
+    // ── Live Order Synchronization via Server-Sent Events (SSE) ──────
+    let eventSource: EventSource | null = null;
+    try {
+      eventSource = new EventSource('/api/orders/stream');
+
+      eventSource.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          if (payload.type === 'ORDER_CREATED' && payload.data) {
+            setOrders((prev) => {
+              if (prev.some((o) => o.id === payload.data.id)) return prev;
+              return [payload.data, ...prev];
+            });
+          } else if (payload.type === 'ORDER_UPDATED' && payload.data) {
+            setOrders((prev) =>
+              prev.map((o) => {
+                if (o.id === payload.data.id) {
+                  return {
+                    ...o,
+                    ...(payload.data.status ? { status: payload.data.status } : {}),
+                    ...(payload.data.paymentStatus ? { paymentStatus: payload.data.paymentStatus } : {}),
+                    ...(payload.data.paymentMethod ? { paymentMethod: payload.data.paymentMethod } : {}),
+                  };
+                }
+                return o;
+              })
+            );
+          }
+        } catch (_) {}
+      };
+    } catch (_) {}
+
+    return () => {
+      if (eventSource) {
+        eventSource.close();
+      }
+    };
   }, [mounted, fetchMenu, fetchOrders, fetchStoreSettings]);
 
   // ── Auth ─────────────────────────────────────────────────────────

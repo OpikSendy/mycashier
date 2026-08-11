@@ -95,6 +95,12 @@ export async function POST(req: NextRequest) {
       `;
     }
 
+    // Emit SSE event for real-time live sync across clients
+    try {
+      const { orderEmitter, ORDER_EVENT_TYPE } = await import('@/lib/events');
+      orderEmitter.emit(ORDER_EVENT_TYPE.CREATED, { ...order, items });
+    } catch (_) {}
+
     return NextResponse.json({ success: true, orderId: order.id }, { status: 201 });
   } catch (error: any) {
     console.error('[POST /api/orders]', error.message);

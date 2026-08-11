@@ -34,6 +34,12 @@ export async function PATCH(
       `;
     }
 
+    // Emit SSE event for order status update
+    try {
+      const { orderEmitter, ORDER_EVENT_TYPE } = await import('@/lib/events');
+      orderEmitter.emit(ORDER_EVENT_TYPE.UPDATED, { id, ...body });
+    } catch (_) {}
+
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error(`[PATCH /api/orders/${id}]`, error.message);
