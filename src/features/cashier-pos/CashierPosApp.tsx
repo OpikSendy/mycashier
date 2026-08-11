@@ -25,10 +25,12 @@ import {
   Cookie,
   Cake,
   Bell,
+  Split,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useOrderNotification } from '@/hooks/useOrderNotification';
 import ThermalReceiptModal from '@/components/common/ThermalReceiptModal';
+import SplitBillModal from './SplitBillModal';
 
 export default function CashierPosApp() {
   const { language, menu, orders, cart, addToCart, updateCartQuantity, clearCart, createOrder, markOrderPaid, storeSettings } = useApp();
@@ -39,6 +41,7 @@ export default function CashierPosApp() {
   const [activeCategory, setActiveCategory] = useState<'all' | 'food' | 'drinks' | 'snack' | 'dessert'>('all');
   const [activeSubCategory, setActiveSubCategory] = useState<string>('all');
   const [selectedOrderForPayment, setSelectedOrderForPayment] = useState<Order | null>(null);
+  const [splitBillOrder, setSplitBillOrder] = useState<Order | null>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>('CASH');
   const [cashAmountPaid, setCashAmountPaid] = useState<string>('');
   const [receiptOrder, setReceiptOrder] = useState<Order | null>(null);
@@ -377,15 +380,25 @@ export default function CashierPosApp() {
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => {
-                        setSelectedOrderForPayment(order);
-                        setCashAmountPaid(String(order.totalAmount));
-                      }}
-                      className="px-3.5 py-2 rounded-xl bg-slate-900 text-white dark:bg-emerald-500 dark:text-slate-950 font-extrabold text-xs hover:bg-slate-800 cursor-pointer shadow-xs active:scale-95"
-                    >
-                      Proses
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => setSplitBillOrder(order)}
+                        className="px-2.5 py-2 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 font-extrabold text-[11px] hover:bg-indigo-500/20 cursor-pointer shadow-xs active:scale-95 flex items-center gap-1"
+                        title="Split Bill / Bagi Bayar"
+                      >
+                        <Split className="w-3.5 h-3.5" />
+                        <span>Split</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedOrderForPayment(order);
+                          setCashAmountPaid(String(order.totalAmount));
+                        }}
+                        className="px-3 py-2 rounded-xl bg-slate-900 text-white dark:bg-emerald-500 dark:text-slate-950 font-extrabold text-xs hover:bg-slate-800 cursor-pointer shadow-xs active:scale-95"
+                      >
+                        Proses
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -484,6 +497,17 @@ export default function CashierPosApp() {
           taxRate={storeSettings?.taxRate}
         />
       )}
+
+      {/* Split Bill Calculator Modal */}
+      <SplitBillModal
+        order={splitBillOrder}
+        isOpen={Boolean(splitBillOrder)}
+        onClose={() => setSplitBillOrder(null)}
+        onSuccess={(orderId, method) => {
+          markOrderPaid(orderId, method);
+          if (splitBillOrder) setReceiptOrder(splitBillOrder);
+        }}
+      />
     </div>
   );
 }
