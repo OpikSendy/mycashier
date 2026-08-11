@@ -54,6 +54,12 @@ export default function UserPwaApp() {
   const [itemNotes, setItemNotes] = useState('');
   const [selectedVariantChips, setSelectedVariantChips] = useState<Record<string, string>>({});
 
+  // Promo Voucher State
+  const [voucherCode, setVoucherCode] = useState('');
+  const [appliedVoucher, setAppliedVoucher] = useState<{ code: string; discount: number; desc: string } | null>(null);
+  const [voucherError, setVoucherError] = useState('');
+  const [voucherLoading, setVoucherLoading] = useState(false);
+
   // Table Lock via QR Scan URL Query Param (?table=Meja%2004 or ?table=04)
   const [isTableLocked, setIsTableLocked] = useState<boolean>(false);
 
@@ -758,8 +764,83 @@ export default function UserPwaApp() {
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
                       placeholder="Contoh: Budi (Meja 04)"
-                      className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 shadow-sm"
+                      className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 shadow-sm mb-3"
                     />
+                  </div>
+
+                  {/* Promo Voucher Input & Badge */}
+                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 space-y-2">
+                    <label className="block text-[11px] font-bold text-slate-500 flex items-center justify-between">
+                      <span>Kupon Promo Diskon</span>
+                      <span className="text-[9px] text-emerald-600 font-extrabold uppercase">Coba: WELCOME10 / HEMAT20</span>
+                    </label>
+
+                    {appliedVoucher ? (
+                      <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between">
+                        <div>
+                          <div className="text-xs font-black text-emerald-600 dark:text-emerald-400">
+                            🎉 Kupon {appliedVoucher.code} Aktif!
+                          </div>
+                          <div className="text-[10px] text-slate-500">{appliedVoucher.desc}</div>
+                        </div>
+                        <button
+                          onClick={() => setAppliedVoucher(null)}
+                          className="text-[10px] font-bold text-rose-500 hover:underline px-2 py-1"
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={voucherCode}
+                          onChange={(e) => {
+                            setVoucherCode(e.target.value.toUpperCase());
+                            setVoucherError('');
+                          }}
+                          placeholder="Masukkan kode kupon..."
+                          className="flex-1 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-mono font-bold uppercase focus:outline-none focus:border-emerald-500"
+                        />
+                        <button
+                          type="button"
+                          disabled={voucherLoading || !voucherCode}
+                          onClick={async () => {
+                            setVoucherLoading(true);
+                            setVoucherError('');
+                            try {
+                              const res = await fetch('/api/vouchers', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ code: voucherCode, subtotal: cartSubtotal }),
+                              });
+                              const json = await res.json();
+                              if (!res.ok) {
+                                setVoucherError(json.error || 'Gagal memproses kupon');
+                              } else {
+                                setAppliedVoucher({
+                                  code: json.voucher.code,
+                                  discount: json.discountAmount,
+                                  desc: json.voucher.description,
+                                });
+                                setVoucherCode('');
+                              }
+                            } catch (_) {
+                              setVoucherError('Gagal menghubungkan ke layanan kupon');
+                            } finally {
+                              setVoucherLoading(false);
+                            }
+                          }}
+                          className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs disabled:opacity-50 cursor-pointer transition-all shadow-2xs"
+                        >
+                          {voucherLoading ? 'Proses...' : 'Gunakan'}
+                        </button>
+                      </div>
+                    )}
+
+                    {voucherError && (
+                      <div className="text-[10px] text-rose-500 font-bold px-1">{voucherError}</div>
+                    )}
                   </div>
 
                   <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 text-xs space-y-1.5">
@@ -771,10 +852,16 @@ export default function UserPwaApp() {
                       <span>Pajak Resto (10%)</span>
                       <span>Rp {cartTax.toLocaleString('id-ID')}</span>
                     </div>
+                    {appliedVoucher && (
+                      <div className="flex justify-between text-emerald-600 font-bold">
+                        <span>Diskon Kupon ({appliedVoucher.code})</span>
+                        <span>- Rp {appliedVoucher.discount.toLocaleString('id-ID')}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between font-black text-sm text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-800">
                       <span>Total Tagihan</span>
                       <span className="text-emerald-600 dark:text-emerald-400">
-                        Rp {cartTotal.toLocaleString('id-ID')}
+                        Rp {Math.max(0, cartTotal - (appliedVoucher?.discount || 0)).toLocaleString('id-ID')}
                       </span>
                     </div>
                   </div>

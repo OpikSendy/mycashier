@@ -42,6 +42,7 @@ import {
   BarChart3,
   Award,
   Download,
+  Tag,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -176,8 +177,15 @@ export default function AdminCmsApp() {
   } = useApp();
   const t = TRANSLATIONS[language].manager;
 
-  type AdminTab = 'dashboard' | 'menu_master' | 'orders_log' | 'qr_generator' | 'store_settings';
+  type AdminTab = 'dashboard' | 'menu_master' | 'orders_log' | 'qr_generator' | 'vouchers' | 'store_settings';
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
+
+  // Vouchers state
+  const [vouchersList, setVouchersList] = useState<any[]>([
+    { id: 'v1', code: 'WELCOME10', type: 'PERCENTAGE', value: 10, minSpend: 30000, desc: 'Diskon 10% khusus pengunjung baru' },
+    { id: 'v2', code: 'HEMAT20', type: 'PERCENTAGE', value: 20, minSpend: 50000, desc: 'Diskon 20% hemat banget' },
+    { id: 'v3', code: 'MYCASHIER50', type: 'FLAT', value: 25000, minSpend: 100000, desc: 'Potongan Rp 25.000 makan bersama' },
+  ]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [copiedTable, setCopiedTable] = useState<string | null>(null);
@@ -363,6 +371,7 @@ export default function AdminCmsApp() {
           { id: 'menu_master', label: `Master Menu (${menu.length})`, icon: <Package className="w-4 h-4" /> },
           { id: 'qr_generator', label: 'QR Code Meja', icon: <QrCode className="w-4 h-4 text-emerald-500" /> },
           { id: 'orders_log', label: `Log Transaksi (${orders.length})`, icon: <Layers className="w-4 h-4" /> },
+          { id: 'vouchers', label: `Kupon Promo (${vouchersList.length})`, icon: <Tag className="w-4 h-4 text-amber-500" /> },
           { id: 'store_settings', label: 'Pengaturan Toko', icon: <Settings className="w-4 h-4" /> },
         ].map((tab) => (
           <button
@@ -717,7 +726,48 @@ export default function AdminCmsApp() {
         </div>
       )}
 
-      {/* TAB 5: STORE SETTINGS */}
+      {/* TAB 5: VOUCHERS PROMO MANAGER */}
+      {activeTab === 'vouchers' && (
+        <div className="space-y-6 max-w-4xl">
+          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                  <Tag className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Pengelolaan Kupon Diskon Resto</h3>
+                  <p className="text-[10px] text-slate-400">Atur kode promo aktif yang dapat digunakan pelanggan & kasir</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {vouchersList.map((v) => (
+                <div key={v.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-2 relative overflow-hidden">
+                  <div className="flex justify-between items-start">
+                    <span className="px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-mono font-black uppercase tracking-wider">
+                      {v.code}
+                    </span>
+                    <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full bg-emerald-500/10">
+                      {v.type === 'PERCENTAGE' ? `Diskon ${v.value}%` : `Potongan Rp ${v.value.toLocaleString('id-ID')}`}
+                    </span>
+                  </div>
+
+                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 leading-snug">
+                    {v.desc}
+                  </p>
+
+                  <div className="text-[10px] text-slate-400 pt-1 border-t border-slate-200 dark:border-slate-700 flex justify-between">
+                    <span>Min. Belanja:</span>
+                    <span className="font-bold text-slate-700 dark:text-slate-300">Rp {(v.minSpend || 0).toLocaleString('id-ID')}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
       {activeTab === 'store_settings' && (
         <div className="max-w-lg">
           <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm mb-6">
