@@ -44,10 +44,12 @@ import {
   Download,
   Tag,
   Boxes,
+  Sparkles,
 } from 'lucide-react';
 import Image from 'next/image';
 import InventoryManagerModal from './InventoryManagerModal';
 import TableMapModal from './TableMapModal';
+import AiBriefingModal from './AiBriefingModal';
 
 // ─── Shared preset data ──────────────────────────────────────────────────────
 const SUB_CATEGORY_PRESETS = [
@@ -192,6 +194,7 @@ export default function AdminCmsApp() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isInventoryModalOpen, setIsInventoryModalOpen] = useState(false);
   const [isTableMapOpen, setIsTableMapOpen] = useState(false);
+  const [isAiBriefingOpen, setIsAiBriefingOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [copiedTable, setCopiedTable] = useState<string | null>(null);
 
@@ -358,6 +361,14 @@ export default function AdminCmsApp() {
             {isDbConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
             <span>{isDbConnected ? 'PostgreSQL Connected' : 'In-Memory Mode'}</span>
           </div>
+
+          <button
+            onClick={() => setIsAiBriefingOpen(true)}
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-indigo-500/20 active:scale-95 transition-all cursor-pointer"
+          >
+            <Sparkles className="w-4 h-4 text-purple-200 animate-pulse" />
+            <span>AI Daily Briefing</span>
+          </button>
 
           <button
             onClick={() => setIsTableMapOpen(true)}
@@ -985,6 +996,14 @@ export default function AdminCmsApp() {
         isOpen={isTableMapOpen}
         onClose={() => setIsTableMapOpen(false)}
         orders={orders}
+      />
+
+      {/* Executive AI Daily Sales Briefing Modal */}
+      <AiBriefingModal
+        isOpen={isAiBriefingOpen}
+        onClose={() => setIsAiBriefingOpen(false)}
+        orders={orders}
+        totalRevenue={totalRevenue}
       />
     </div>
   );
