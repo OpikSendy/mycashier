@@ -1,50 +1,22 @@
-# API Specifications — MyCashier
+# REST API Specification — MyCashier
 
-## 1. POST /api/orders
-Mengirim pesanan meja baru dari pelanggan atau kasir.
+Seluruh API route berjalan di Next.js 16 App Router (`src/app/api/`) dengan type safety penuh dan dukungan PostgreSQL / Fallback in-memory.
 
-### Request Body:
-```json
-{
-  "tableNumber": "Meja 04",
-  "customerName": "Sendy",
-  "items": [
-    {
-      "productId": "prod-1",
-      "quantity": 2,
-      "price": 28000,
-      "notes": "Less Sugar"
-    }
-  ],
-  "paymentMethod": "QRIS"
-}
-```
+---
 
-### Response (201 Created):
-```json
-{
-  "success": true,
-  "orderId": "ORD-88219",
-  "status": "PENDING",
-  "message": "Pesanan Meja 04 berhasil dibuat dan diteruskan ke Dapur!"
-}
-```
+## 📋 API Endpoints Index (17 Endpoints)
 
-## 2. POST /api/chat
-Menjawab pertanyaan manajemen & analitik bisnis resto via OpenRouter AI.
-
-### Request Body:
-```json
-{
-  "messages": [
-    { "role": "user", "content": "Berapa total omzet hari ini dan menu apa yang paling laku?" }
-  ]
-}
-```
-
-### Response (200 OK):
-```json
-{
-  "reply": "Omzet hari ini mencapai Rp 1.450.000 dengan total 28 transaksi. Menu terlaris adalah Kopi Susu Aren (14 porsi)."
-}
-```
+| Endpoint | Method | Description |
+|---|---|---|
+| `/api/menu` | `GET`, `POST` | Fetch all menu items & create new menu item |
+| `/api/menu/[id]` | `PUT`, `PATCH`, `DELETE` | Update full item, toggle availability, or delete item |
+| `/api/orders` | `GET`, `POST` | Fetch all orders with batch items & create new order |
+| `/api/orders/[id]` | `PATCH` | Update kitchen status (`PENDING`/`COOKING`/`READY`/`SERVED`) & mark paid |
+| `/api/orders/stream` | `GET` | Server-Sent Events (SSE) live order stream |
+| `/api/store-settings` | `GET`, `PUT` | Read & Update store configuration (Name, Tax %, Logo, Address) |
+| `/api/analytics` | `GET` | 7-day revenue trend, payment distribution, & top products |
+| `/api/recommendations` | `GET` | AI contextual menu recommendations based on active cart |
+| `/api/vouchers` | `GET`, `POST` | Fetch active vouchers & validate promo discount codes |
+| `/api/inventory` | `GET`, `POST`, `PUT` | Raw material stock tracking & low-stock alerts |
+| `/api/ai/briefing` | `GET` | Executive AI Daily Sales Briefing in Markdown format |
+| `/api/chat` | `POST` | Ask MyCashier AI chat assistant via OpenRouter API |

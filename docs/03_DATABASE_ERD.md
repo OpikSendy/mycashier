@@ -1,56 +1,79 @@
-# Database ERD & Schema Specification — MyCashier
+# Database ERD & Schema Design — MyCashier
 
-## Entities & Relationships
+## PostgreSQL Relational Schema (Neon Serverless)
 
 ```mermaid
 erDiagram
-    CATEGORY ||--o{ PRODUCT : contains
-    PRODUCT ||--o{ ORDER_ITEM : ordered_in
-    ORDER ||--|{ ORDER_ITEM : includes
-    PAYMENT ||--|| ORDER : pays_for
-
-    CATEGORY {
-        string id PK
+    store_settings {
+        int id PK
         string name
-        string slug
+        string logo_url
+        string address
+        numeric tax_rate
+        timestamp updated_at
     }
 
-    PRODUCT {
+    menus {
         string id PK
-        string categoryId FK
         string name
-        number price
+        string name_en
+        string category
+        string sub_category
+        string variant_preset
+        numeric price
         string description
+        string description_en
         string image
-        boolean isAvailable
+        boolean is_available
+        boolean is_popular
+        timestamp created_at
     }
 
-    ORDER {
+    orders {
         string id PK
-        string tableNumber
-        string customerName
-        string status "PENDING | COOKING | READY | SERVED | COMPLETED"
-        number totalAmount
-        string paymentStatus "UNPAID | PAID"
-        string paymentMethod "CASH | QRIS | DEBIT"
-        datetime createdAt
+        string table_number
+        string customer_name
+        numeric total_amount
+        string status
+        string payment_status
+        string payment_method
+        timestamp created_at
     }
 
-    ORDER_ITEM {
+    order_items {
         string id PK
-        string orderId FK
-        string productId FK
-        number quantity
-        number price
+        string order_id FK
+        string product_id FK
+        string product_name
+        numeric price
+        int quantity
         string notes
     }
 
-    PAYMENT {
+    vouchers {
         string id PK
-        string orderId FK
-        number amountPaid
-        number change
-        string method
-        datetime paidAt
+        string code
+        string type
+        numeric value
+        numeric min_spend
+        string description
+        boolean is_active
     }
+
+    inventory_items {
+        string id PK
+        string name
+        numeric stock_quantity
+        string unit
+        numeric min_threshold
+    }
+
+    orders ||--|{ order_items : "contains"
+    menus ||--o{ order_items : "referenced in"
 ```
+
+---
+
+## Table Definitions DDL SQL
+
+Lokasi SQL DDL lengkap tersimpan pada [`src/lib/schema.sql`](file:///c:/Capstone/mycashier/src/lib/schema.sql).
