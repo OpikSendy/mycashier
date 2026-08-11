@@ -707,6 +707,47 @@ export default function UserPwaApp() {
                   ))}
                 </div>
 
+                {/* AI Smart Upselling Section */}
+                <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 border border-emerald-500/20 dark:border-emerald-700/30 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs font-black text-emerald-700 dark:text-emerald-400">
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+                      <span>AI Rekomendasi: Sering Dibeli Bersama</span>
+                    </div>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">AI Paired</span>
+                  </div>
+
+                  <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                    {menu
+                      .filter((m) => !cart.some((c) => c.item.id === m.id) && m.isAvailable)
+                      .slice(0, 3)
+                      .map((rec) => (
+                        <div
+                          key={rec.id}
+                          className="flex items-center gap-2.5 p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex-shrink-0 w-52 shadow-2xs"
+                        >
+                          <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0 relative">
+                            <Image src={rec.image} alt={rec.name} fill className="object-cover" unoptimized />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-[11px] font-bold text-slate-900 dark:text-white truncate">
+                              {rec.name}
+                            </div>
+                            <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-extrabold">
+                              Rp {rec.price.toLocaleString('id-ID')}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => addToCart(rec)}
+                            className="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[10px] shadow-2xs active:scale-95 transition-all flex-shrink-0 cursor-pointer"
+                          >
+                            + Tambah
+                          </button>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+
                 <div className="pt-2 space-y-3">
                   <div>
                     <label className="block text-[11px] font-bold text-slate-500 mb-1">
