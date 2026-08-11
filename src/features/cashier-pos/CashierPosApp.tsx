@@ -28,9 +28,10 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { useOrderNotification } from '@/hooks/useOrderNotification';
+import ThermalReceiptModal from '@/components/common/ThermalReceiptModal';
 
 export default function CashierPosApp() {
-  const { language, menu, orders, cart, addToCart, updateCartQuantity, clearCart, createOrder, markOrderPaid } = useApp();
+  const { language, menu, orders, cart, addToCart, updateCartQuantity, clearCart, createOrder, markOrderPaid, storeSettings } = useApp();
   const { permission, requestPermission, sendNotification } = useOrderNotification();
   const t = TRANSLATIONS[language].cashier;
 
@@ -473,48 +474,15 @@ export default function CashierPosApp() {
         </div>
       )}
 
-      {/* Receipt Simulator */}
+      {/* Thermal Receipt Modal Simulator */}
       {receiptOrder && (
-        <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150">
-          <div className="w-full max-w-sm p-6 rounded-3xl bg-white text-slate-900 shadow-2xl font-mono text-xs space-y-4 border border-slate-200">
-            <div className="text-center border-b border-dashed border-slate-300 pb-3">
-              <h3 className="text-base font-black uppercase tracking-wider">MYCASHIER POS STATION</h3>
-              <p className="text-[10px] text-slate-500">Struk Pembayaran Kasir Lunas</p>
-            </div>
-
-            <div className="space-y-1 text-[11px]">
-              <div className="flex justify-between"><span>No. Transaksi:</span><span className="font-bold">{receiptOrder.id}</span></div>
-              <div className="flex justify-between"><span>Pelanggan/Meja:</span><span className="font-bold">{receiptOrder.tableNumber} ({receiptOrder.customerName})</span></div>
-              <div className="flex justify-between"><span>Waktu:</span><span>{receiptOrder.createdAt}</span></div>
-              <div className="flex justify-between"><span>Metode Bayar:</span><span className="font-bold text-emerald-700">{receiptOrder.paymentMethod} (LUNAS)</span></div>
-            </div>
-
-            <div className="py-2 border-y border-dashed border-slate-300 space-y-1.5 text-[11px]">
-              {receiptOrder.items.map((item, i) => (
-                <div key={i} className="flex justify-between">
-                  <span>{item.quantity}x {item.productName}</span>
-                  <span>Rp {(item.price * item.quantity).toLocaleString('id-ID')}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex justify-between text-xs font-bold">
-              <span>TOTAL LUNAS:</span>
-              <span className="text-sm">Rp {receiptOrder.totalAmount.toLocaleString('id-ID')}</span>
-            </div>
-
-            <div className="text-center pt-2 text-[10px] text-slate-500">
-              *Stok Barang Otomatis Terpotong*
-            </div>
-
-            <button
-              onClick={() => setReceiptOrder(null)}
-              className="w-full py-2.5 bg-slate-900 text-white font-sans font-bold rounded-2xl hover:bg-slate-800 text-xs cursor-pointer"
-            >
-              Tutup Struk
-            </button>
-          </div>
-        </div>
+        <ThermalReceiptModal
+          order={receiptOrder}
+          onClose={() => setReceiptOrder(null)}
+          storeName={storeSettings?.name}
+          storeAddress={storeSettings?.address}
+          taxRate={storeSettings?.taxRate}
+        />
       )}
     </div>
   );
