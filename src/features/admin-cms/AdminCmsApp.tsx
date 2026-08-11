@@ -47,6 +47,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import InventoryManagerModal from './InventoryManagerModal';
+import TableMapModal from './TableMapModal';
 
 // ─── Shared preset data ──────────────────────────────────────────────────────
 const SUB_CATEGORY_PRESETS = [
@@ -190,6 +191,7 @@ export default function AdminCmsApp() {
   ]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isInventoryModalOpen, setIsInventoryModalOpen] = useState(false);
+  const [isTableMapOpen, setIsTableMapOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [copiedTable, setCopiedTable] = useState<string | null>(null);
 
@@ -356,6 +358,14 @@ export default function AdminCmsApp() {
             {isDbConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
             <span>{isDbConnected ? 'PostgreSQL Connected' : 'In-Memory Mode'}</span>
           </div>
+
+          <button
+            onClick={() => setIsTableMapOpen(true)}
+            className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-indigo-500/20 active:scale-95 transition-all cursor-pointer"
+          >
+            <QrCode className="w-4 h-4" />
+            <span>Denah Meja &amp; QR Standee</span>
+          </button>
 
           <button
             onClick={() => setIsInventoryModalOpen(true)}
@@ -968,6 +978,13 @@ export default function AdminCmsApp() {
       <InventoryManagerModal
         isOpen={isInventoryModalOpen}
         onClose={() => setIsInventoryModalOpen(false)}
+      />
+
+      {/* Table Floor Map & QR Standee Modal */}
+      <TableMapModal
+        isOpen={isTableMapOpen}
+        onClose={() => setIsTableMapOpen(false)}
+        orders={orders}
       />
     </div>
   );
