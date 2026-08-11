@@ -272,3 +272,84 @@ export const INITIAL_ORDERS: Order[] = [
     createdAt: '19:30:15',
   },
 ];
+
+export interface InventoryItem {
+  id: string;
+  name: string;
+  nameEn?: string;
+  category: 'raw_material' | 'packaging' | 'beverage_base';
+  stock: number;
+  unit: 'kg' | 'liter' | 'pack' | 'pcs' | 'gram';
+  minThreshold: number;
+  costPerUnit: number;
+  lastRestocked: string;
+}
+
+export const INITIAL_INVENTORY: InventoryItem[] = [
+  {
+    id: 'inv-1',
+    name: 'Biji Kopi House Blend Arabica',
+    nameEn: 'Arabica Coffee Beans House Blend',
+    category: 'raw_material',
+    stock: 12.5,
+    unit: 'kg',
+    minThreshold: 3.0,
+    costPerUnit: 180000,
+    lastRestocked: '2026-08-01',
+  },
+  {
+    id: 'inv-2',
+    name: 'Susu Fresh Milk Pasteurisasi',
+    nameEn: 'Pasteurized Fresh Whole Milk',
+    category: 'beverage_base',
+    stock: 4.0,
+    unit: 'liter',
+    minThreshold: 10.0, // Triggers warning badge!
+    costPerUnit: 22000,
+    lastRestocked: '2026-08-10',
+  },
+  {
+    id: 'inv-3',
+    name: 'Sirup Gula Aren Organik',
+    nameEn: 'Organic Palm Sugar Syrup',
+    category: 'beverage_base',
+    stock: 8.5,
+    unit: 'liter',
+    minThreshold: 2.5,
+    costPerUnit: 45000,
+    lastRestocked: '2026-08-05',
+  },
+  {
+    id: 'inv-4',
+    name: 'Daging Sapi Wagyu Slide SL',
+    nameEn: 'Sliced Wagyu Beef Grade A',
+    category: 'raw_material',
+    stock: 15.0,
+    unit: 'kg',
+    minThreshold: 5.0,
+    costPerUnit: 250000,
+    lastRestocked: '2026-08-08',
+  },
+  {
+    id: 'inv-5',
+    name: 'Uji Matcha Powder Impor',
+    nameEn: 'Imported Uji Matcha Powder',
+    category: 'raw_material',
+    stock: 1.2,
+    unit: 'kg',
+    minThreshold: 1.0,
+    costPerUnit: 420000,
+    lastRestocked: '2026-07-28',
+  },
+  {
+    id: 'inv-6',
+    name: 'Paper Cup Takeaway 12oz',
+    nameEn: 'Takeaway Paper Cups 12oz',
+    category: 'packaging',
+    stock: 350,
+    unit: 'pcs',
+    minThreshold: 100,
+    costPerUnit: 800,
+    lastRestocked: '2026-08-02',
+  },
+];

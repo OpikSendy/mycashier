@@ -43,8 +43,10 @@ import {
   Award,
   Download,
   Tag,
+  Boxes,
 } from 'lucide-react';
 import Image from 'next/image';
+import InventoryManagerModal from './InventoryManagerModal';
 
 // ─── Shared preset data ──────────────────────────────────────────────────────
 const SUB_CATEGORY_PRESETS = [
@@ -187,6 +189,7 @@ export default function AdminCmsApp() {
     { id: 'v3', code: 'MYCASHIER50', type: 'FLAT', value: 25000, minSpend: 100000, desc: 'Potongan Rp 25.000 makan bersama' },
   ]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isInventoryModalOpen, setIsInventoryModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [copiedTable, setCopiedTable] = useState<string | null>(null);
 
@@ -353,6 +356,14 @@ export default function AdminCmsApp() {
             {isDbConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
             <span>{isDbConnected ? 'PostgreSQL Connected' : 'In-Memory Mode'}</span>
           </div>
+
+          <button
+            onClick={() => setIsInventoryModalOpen(true)}
+            className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-md shadow-amber-500/20 active:scale-95 transition-all cursor-pointer"
+          >
+            <Boxes className="w-4 h-4" />
+            <span>Stok &amp; Bahan Baku</span>
+          </button>
 
           <button
             onClick={() => { setIsAddModalOpen(true); resetForm(); }}
@@ -952,6 +963,12 @@ export default function AdminCmsApp() {
           </form>
         </div>
       )}
+
+      {/* Inventory Stock Manager Modal */}
+      <InventoryManagerModal
+        isOpen={isInventoryModalOpen}
+        onClose={() => setIsInventoryModalOpen(false)}
+      />
     </div>
   );
 }
