@@ -41,6 +41,7 @@ export default function UserPwaApp() {
     updateCartQuantity,
     clearCart,
     createOrder,
+    markOrderPaid,
     orders,
   } = useApp();
   const t = TRANSLATIONS[language].customer;
@@ -59,6 +60,11 @@ export default function UserPwaApp() {
   const [appliedVoucher, setAppliedVoucher] = useState<{ code: string; discount: number; desc: string } | null>(null);
   const [voucherError, setVoucherError] = useState('');
   const [voucherLoading, setVoucherLoading] = useState(false);
+
+  // Dynamic QRIS Self-Pay State
+  const [showQrisModal, setShowQrisModal] = useState(false);
+  const [qrisOrder, setQrisOrder] = useState<Order | null>(null);
+  const [qrisCountdown, setQrisCountdown] = useState(30);
 
   // Table Lock via QR Scan URL Query Param (?table=Meja%2004 or ?table=04)
   const [isTableLocked, setIsTableLocked] = useState<boolean>(false);
@@ -979,15 +985,89 @@ export default function UserPwaApp() {
                   </div>
 
                   <div className="flex justify-between items-center text-xs font-black border-t border-slate-100 dark:border-slate-800 pt-2.5">
-                    <span>Total Tagihan</span>
-                    <span className="text-emerald-600 dark:text-emerald-400">
-                      Rp {order.totalAmount.toLocaleString('id-ID')}
-                    </span>
+                    <div>
+                      <div className="text-[10px] text-slate-400 font-normal">Total Tagihan</div>
+                      <div className="text-emerald-600 dark:text-emerald-400">
+                        Rp {order.totalAmount.toLocaleString('id-ID')}
+                      </div>
+                    </div>
+
+                    {order.paymentStatus === 'UNPAID' ? (
+                      <button
+                        onClick={() => {
+                          setQrisOrder(order);
+                          setShowQrisModal(true);
+                          setQrisCountdown(30);
+                        }}
+                        className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-extrabold text-xs shadow-md shadow-emerald-500/20 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <QrCode className="w-4 h-4" />
+                        <span>Bayar QRIS Instant</span>
+                      </button>
+                    ) : (
+                      <span className="px-2.5 py-1 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold text-[10px] border border-emerald-500/20">
+                        ✓ LUNAS ({order.paymentMethod})
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Dynamic QRIS Self-Payment Modal Simulator */}
+      {showQrisModal && qrisOrder && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl text-center space-y-4 relative overflow-hidden">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <QrCode className="w-5 h-5 text-emerald-500" />
+                <span className="font-black text-sm text-slate-900 dark:text-white">Pembayaran QRIS Mandiri</span>
+              </div>
+              <button
+                onClick={() => setShowQrisModal(false)}
+                className="text-xs text-slate-400 font-bold hover:underline"
+              >
+                Tutup
+              </button>
+            </div>
+
+            <div>
+              <div className="text-xs text-slate-500">Total Pembayaran Tagihan:</div>
+              <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
+                Rp {qrisOrder.totalAmount.toLocaleString('id-ID')}
+              </div>
+              <div className="text-[10px] text-slate-400 mt-0.5">Scan via GoPay, OVO, Dana, ShopeePay, BCA, Mandiri</div>
+            </div>
+
+            {/* Simulated QR Code Barcode */}
+            <div className="p-3 bg-white rounded-2xl border-2 border-dashed border-emerald-500/40 inline-block shadow-inner relative">
+              <QrCode className="w-40 h-40 text-slate-900 mx-auto" />
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="px-2 py-0.5 rounded-md bg-emerald-600 text-white font-black text-[9px] shadow-sm">
+                  MYCASHIER QRIS
+                </div>
+              </div>
+            </div>
+
+            <div className="text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center justify-center gap-1.5 bg-amber-500/10 py-1.5 rounded-xl border border-amber-500/20">
+              <Clock className="w-3.5 h-3.5 animate-pulse" />
+              <span>Sisa Waktu QRIS: 30 Detik</span>
+            </div>
+
+            <button
+              onClick={() => {
+                markOrderPaid(qrisOrder.id, 'QRIS');
+                setShowQrisModal(false);
+                setQrisOrder(null);
+              }}
+              className="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-md shadow-emerald-500/20 active:scale-95 transition-all cursor-pointer"
+            >
+              ✨ Simulasi Bayar QRIS (Sukses)
+            </button>
+          </div>
         </div>
       )}
 
