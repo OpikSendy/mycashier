@@ -283,7 +283,39 @@ export default function UserPwaApp() {
 
       {/* TAB 1: MENU LIST WITH PER-CATEGORY SECTIONS */}
       {activeTab === 'menu' && (
-        <div className="space-y-6">
+        <div className="space-y-4">
+          {/* Member Loyalty Pass Card Widget */}
+          <div className="p-4 rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white shadow-xl border border-slate-700/50 space-y-3 relative overflow-hidden">
+            <div className="flex items-center justify-between relative z-10">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-black text-xs">
+                  🏆
+                </div>
+                <div>
+                  <div className="text-xs font-black text-white">Budi Santoso</div>
+                  <div className="text-[10px] font-bold text-amber-400 flex items-center gap-1">
+                    <span>🥈 SILVER MEMBER</span>
+                    <span className="text-[8px] px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300">Active</span>
+                  </div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-sm font-black text-emerald-400">120 Points</div>
+                <div className="text-[9px] text-slate-400">1 Poin = Rp 10.000</div>
+              </div>
+            </div>
+
+            <div className="space-y-1 relative z-10">
+              <div className="flex justify-between text-[10px] text-slate-300">
+                <span>Progress ke GOLD Tier</span>
+                <span className="font-bold text-amber-400">80% (30 poin lagi)</span>
+              </div>
+              <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-emerald-400 to-amber-400 rounded-full w-[80%]" />
+              </div>
+            </div>
+          </div>
+
           {/* Search Bar */}
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
