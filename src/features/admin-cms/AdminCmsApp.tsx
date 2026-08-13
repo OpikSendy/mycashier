@@ -179,11 +179,22 @@ export default function AdminCmsApp() {
     language, menu, orders,
     toggleProductAvailability, addNewMenuItem, updateMenuItem, deleteMenuItem,
     storeSettings, updateStoreSettings, isDbConnected,
+    tenants, activeTenant, setActiveTenant, registerNewTenant,
   } = useApp();
   const t = TRANSLATIONS[language].manager;
 
   type AdminTab = 'dashboard' | 'menu_master' | 'orders_log' | 'qr_generator' | 'vouchers' | 'store_settings';
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
+
+  // Multi-Tenant New Store Modal State
+  const [isNewStoreModalOpen, setIsNewStoreModalOpen] = useState(false);
+  const [newStoreForm, setNewStoreForm] = useState({
+    name: '',
+    slug: '',
+    tagline: '',
+    city: 'Jakarta Pusat',
+    plan: 'PRO' as 'FREE' | 'PRO' | 'ENTERPRISE',
+  });
 
   // Vouchers state
   const [vouchersList, setVouchersList] = useState<any[]>([
@@ -352,6 +363,33 @@ export default function AdminCmsApp() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          {/* Multi-Tenant Resto Selector Badge */}
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold">
+            <span className="text-[10px] text-slate-400 font-normal">Resto SaaS:</span>
+            <select
+              value={activeTenant.id}
+              onChange={(e) => {
+                const found = tenants.find((t) => t.id === e.target.value);
+                if (found) setActiveTenant(found);
+              }}
+              className="bg-transparent text-xs font-black text-emerald-600 dark:text-emerald-400 focus:outline-none cursor-pointer"
+            >
+              {tenants.map((t) => (
+                <option key={t.id} value={t.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                  🏬 {t.name} ({t.plan})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            onClick={() => setIsNewStoreModalOpen(true)}
+            className="px-3.5 py-2 rounded-xl bg-slate-900 text-white dark:bg-slate-800 dark:text-slate-200 hover:bg-slate-800 font-bold text-xs flex items-center gap-1.5 border border-slate-700 shadow-2xs active:scale-95 transition-all cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Registrasi Resto Baru</span>
+          </button>
+
           {/* DB Connection Indicator */}
           <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${
             isDbConnected
@@ -1005,6 +1043,126 @@ export default function AdminCmsApp() {
         orders={orders}
         totalRevenue={totalRevenue}
       />
+
+      {/* ─── NEW STORE MULTI-TENANT REGISTRATION MODAL ───────────────────────── */}
+      {isNewStoreModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              if (!newStoreForm.name) return;
+              await registerNewTenant({
+                name: newStoreForm.name,
+                slug: newStoreForm.slug || newStoreForm.name.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
+                logo: '/icon.jpg',
+                tagline: newStoreForm.tagline || 'Restoran SaaS Mandiri',
+                plan: newStoreForm.plan,
+                primaryColor: '#10b981',
+                city: newStoreForm.city,
+              });
+              setIsNewStoreModalOpen(false);
+              setNewStoreForm({ name: '', slug: '', tagline: '', city: 'Jakarta Pusat', plan: 'PRO' });
+            }}
+            className="w-full max-w-md p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4"
+          >
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600">
+                  <Store className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Registrasi Resto SaaS Baru</h3>
+                  <p className="text-[10px] text-slate-400">Daftarkan restoran baru ke dalam sistem Multi-Tenant</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsNewStoreModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500 mb-1">Nama Restoran *</label>
+                <input
+                  type="text"
+                  required
+                  value={newStoreForm.name}
+                  onChange={(e) => setNewStoreForm({ ...newStoreForm, name: e.target.value })}
+                  placeholder="Contoh: Kopi Kenangan / Pizza House"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500 mb-1">Domain Slug URL (Unik)</label>
+                <input
+                  type="text"
+                  value={newStoreForm.slug}
+                  onChange={(e) => setNewStoreForm({ ...newStoreForm, slug: e.target.value })}
+                  placeholder="Contoh: kopi-kenangan"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500 mb-1">Tagline / Deskripsi Resto</label>
+                <input
+                  type="text"
+                  value={newStoreForm.tagline}
+                  onChange={(e) => setNewStoreForm({ ...newStoreForm, tagline: e.target.value })}
+                  placeholder="Contoh: Specialty Espresso & Pastry"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 mb-1">Kota / Cabang</label>
+                  <input
+                    type="text"
+                    value={newStoreForm.city}
+                    onChange={(e) => setNewStoreForm({ ...newStoreForm, city: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 mb-1">Paket Subskripsi</label>
+                  <select
+                    value={newStoreForm.plan}
+                    onChange={(e) => setNewStoreForm({ ...newStoreForm, plan: e.target.value as any })}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-emerald-600 focus:outline-none"
+                  >
+                    <option value="FREE">FREE DEMO</option>
+                    <option value="PRO">PRO RESTO</option>
+                    <option value="ENTERPRISE">ENTERPRISE</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsNewStoreModalOpen(false)}
+                className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-500/20 active:scale-95 cursor-pointer transition-all"
+              >
+                + Registrasi Resto
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }
