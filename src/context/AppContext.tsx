@@ -28,10 +28,28 @@ export interface Branch {
   address: string;
 }
 
+export interface Tenant {
+  id: string;
+  slug: string;
+  name: string;
+  logo: string;
+  tagline: string;
+  plan: 'FREE' | 'PRO' | 'ENTERPRISE';
+  primaryColor: string;
+  city: string;
+}
+
 export const INITIAL_BRANCHES: Branch[] = [
   { id: 'b-1', name: 'Cabang Jakarta Pusat', city: 'Jakarta', address: 'Grand Indonesia Mall, Lt. 3' },
   { id: 'b-2', name: 'Cabang Bandung Dago', city: 'Bandung', address: 'Jl. Ir. H. Juanda No. 88, Dago' },
   { id: 'b-3', name: 'Cabang Bali Seminyak', city: 'Bali', address: 'Jl. Kayu Aya No. 12, Seminyak' },
+];
+
+export const INITIAL_TENANTS: Tenant[] = [
+  { id: 't-1', slug: 'mycashier-resto', name: 'MyCashier Resto Utama', logo: '/icon.jpg', tagline: 'Modern F&B Self-Ordering & POS', plan: 'ENTERPRISE', primaryColor: '#10b981', city: 'Jakarta Pusat' },
+  { id: 't-2', slug: 'kopi-kenangan', name: 'Kopi Kenangan Mantan', logo: '/icon.jpg', tagline: 'Specialty Indonesian Espresso', plan: 'PRO', primaryColor: '#f59e0b', city: 'Bandung Dago' },
+  { id: 't-3', slug: 'burger-n-co', name: 'Burger & Co. Artisanal', logo: '/icon.jpg', tagline: 'Gourmet Smash Burgers', plan: 'PRO', primaryColor: '#ef4444', city: 'Surabaya Barat' },
+  { id: 't-4', slug: 'ramen-ya', name: 'Ramen Ya! Authentic Noodle', logo: '/icon.jpg', tagline: 'Authentic Japanese Tonkotsu', plan: 'ENTERPRISE', primaryColor: '#8b5cf6', city: 'Bali Seminyak' },
 ];
 
 interface AppContextType {
@@ -44,6 +62,11 @@ interface AppContextType {
   toggleLanguage: () => void;
   selectedTable: string;
   setSelectedTable: (table: string) => void;
+  // Multi-Tenant SaaS
+  tenants: Tenant[];
+  activeTenant: Tenant;
+  setActiveTenant: (tenant: Tenant) => void;
+  registerNewTenant: (newTenant: Omit<Tenant, 'id'>) => Promise<void>;
   // Branch Switching
   branches: Branch[];
   activeBranch: Branch;
@@ -93,8 +116,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<Language>('ID');
   const [selectedTable, setSelectedTable] = useState<string>('Meja 04');
   const [activeBranch, setActiveBranch] = useState<Branch>(INITIAL_BRANCHES[0]);
+  const [tenants, setTenants] = useState<Tenant[]>(INITIAL_TENANTS);
+  const [activeTenant, setActiveTenant] = useState<Tenant>(INITIAL_TENANTS[0]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [mounted, setMounted] = useState(false);
+
+  const registerNewTenant = async (newTenantData: Omit<Tenant, 'id'>) => {
+    const created: Tenant = {
+      ...newTenantData,
+      id: `t-${Date.now()}`,
+    };
+    setTenants((prev) => [...prev, created]);
+    setActiveTenant(created);
+  };
 
   // ── DB-backed state ──────────────────────────────────────────────
   const [menu, setMenu] = useState<MenuItem[]>(INITIAL_MENU);
@@ -473,6 +507,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         toggleLanguage,
         selectedTable,
         setSelectedTable,
+        tenants,
+        activeTenant,
+        setActiveTenant,
+        registerNewTenant,
         branches: INITIAL_BRANCHES,
         activeBranch,
         setActiveBranch,
