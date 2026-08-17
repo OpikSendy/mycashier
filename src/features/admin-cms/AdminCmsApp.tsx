@@ -23,6 +23,7 @@ import {
   ShoppingBag,
   TrendingUp,
   Layers,
+  ArrowRightLeft,
   Package,
   QrCode,
   Printer,
@@ -45,11 +46,33 @@ import {
   Tag,
   Boxes,
   Sparkles,
+  Receipt,
+  Calculator,
+  Eye,
+  History,
+  RefreshCw,
+  FileSpreadsheet,
+  Search,
+  Filter,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  ShieldAlert,
+  Sliders,
+  ToggleLeft,
+  ToggleRight,
+  Info,
 } from 'lucide-react';
+
 import Image from 'next/image';
+import { calculateOrderTotals, CashRoundingRule, formatRupiah } from '@/lib/taxEngine';
+import { AuditLogEntry } from '@/lib/audit';
 import InventoryManagerModal from './InventoryManagerModal';
 import TableMapModal from './TableMapModal';
 import AiBriefingModal from './AiBriefingModal';
+import AuditDiffModal from './AuditDiffModal';
+import TransferHubModal from './TransferHubModal';
+
 
 // ─── Shared preset data ──────────────────────────────────────────────────────
 const SUB_CATEGORY_PRESETS = [
@@ -183,7 +206,7 @@ export default function AdminCmsApp() {
   } = useApp();
   const t = TRANSLATIONS[language].manager;
 
-  type AdminTab = 'dashboard' | 'menu_master' | 'orders_log' | 'qr_generator' | 'vouchers' | 'store_settings';
+  type AdminTab = 'dashboard' | 'menu_master' | 'orders_log' | 'qr_generator' | 'vouchers' | 'store_settings' | 'audit_logs';
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
 
   // Multi-Tenant New Store Modal State
@@ -204,10 +227,48 @@ export default function AdminCmsApp() {
   ]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isInventoryModalOpen, setIsInventoryModalOpen] = useState(false);
+  const [isTransferHubOpen, setIsTransferHubOpen] = useState(false);
   const [isTableMapOpen, setIsTableMapOpen] = useState(false);
   const [isAiBriefingOpen, setIsAiBriefingOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [copiedTable, setCopiedTable] = useState<string | null>(null);
+
+  // Security Audit Logs state
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditSearch, setAuditSearch] = useState('');
+  const [auditRoleFilter, setAuditRoleFilter] = useState('ALL');
+  const [auditActionFilter, setAuditActionFilter] = useState('ALL');
+  const [auditStatusFilter, setAuditStatusFilter] = useState('ALL');
+  const [selectedLogForDiff, setSelectedLogForDiff] = useState<AuditLogEntry | null>(null);
+  const [isDiffModalOpen, setIsDiffModalOpen] = useState(false);
+
+  const fetchAuditLogs = async () => {
+    setAuditLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (auditSearch) params.set('search', auditSearch);
+      if (auditRoleFilter !== 'ALL') params.set('userRole', auditRoleFilter);
+      if (auditActionFilter !== 'ALL') params.set('actionType', auditActionFilter);
+      if (auditStatusFilter !== 'ALL') params.set('status', auditStatusFilter);
+      params.set('limit', '100');
+
+      const res = await fetch(`/api/audit-logs?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setAuditLogs(data.logs || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch audit logs:', err);
+    } finally {
+      setAuditLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAuditLogs();
+  }, [auditSearch, auditRoleFilter, auditActionFilter, auditStatusFilter, activeTab]);
+
 
   // Shared form state (used by both Add & Edit modals)
   const [name, setName] = useState('');
@@ -224,9 +285,25 @@ export default function AdminCmsApp() {
   const [settingsName, setSettingsName] = useState(storeSettings.name);
   const [settingsLogoUrl, setSettingsLogoUrl] = useState(storeSettings.logoUrl);
   const [settingsAddress, setSettingsAddress] = useState(storeSettings.address);
-  const [settingsTaxRate, setSettingsTaxRate] = useState(String(storeSettings.taxRate));
+  const [settingsTaxRate, setSettingsTaxRate] = useState(String(storeSettings.taxRate ?? 10));
+  const [settingsServiceChargeRate, setSettingsServiceChargeRate] = useState(String(storeSettings.serviceChargeRate ?? 5));
+  const [settingsEnableTax, setSettingsEnableTax] = useState(storeSettings.enableTax ?? true);
+  const [settingsEnableServiceCharge, setSettingsEnableServiceCharge] = useState(storeSettings.enableServiceCharge ?? true);
+  const [settingsCashRoundingRule, setSettingsCashRoundingRule] = useState<CashRoundingRule>(storeSettings.cashRoundingRule ?? 'NONE');
   const [settingsSaving, setSettingsSaving] = useState(false);
   const [settingsSaved, setSettingsSaved] = useState(false);
+  const [simulatedSubtotal, setSimulatedSubtotal] = useState(100000);
+
+  useEffect(() => {
+    setSettingsName(storeSettings.name);
+    setSettingsLogoUrl(storeSettings.logoUrl);
+    setSettingsAddress(storeSettings.address);
+    setSettingsTaxRate(String(storeSettings.taxRate ?? 10));
+    setSettingsServiceChargeRate(String(storeSettings.serviceChargeRate ?? 5));
+    setSettingsEnableTax(storeSettings.enableTax ?? true);
+    setSettingsEnableServiceCharge(storeSettings.enableServiceCharge ?? true);
+    setSettingsCashRoundingRule(storeSettings.cashRoundingRule ?? 'NONE');
+  }, [storeSettings]);
 
   const paidOrders = orders.filter((o) => o.paymentStatus === 'PAID');
   const totalRevenue = paidOrders.reduce((sum, o) => sum + o.totalAmount, 0);
@@ -300,6 +377,10 @@ export default function AdminCmsApp() {
       logoUrl: settingsLogoUrl,
       address: settingsAddress,
       taxRate: Number(settingsTaxRate),
+      serviceChargeRate: Number(settingsServiceChargeRate),
+      enableTax: settingsEnableTax,
+      enableServiceCharge: settingsEnableServiceCharge,
+      cashRoundingRule: settingsCashRoundingRule,
     });
     setSettingsSaving(false);
     setSettingsSaved(true);
@@ -425,6 +506,14 @@ export default function AdminCmsApp() {
           </button>
 
           <button
+            onClick={() => setIsTransferHubOpen(true)}
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-indigo-500/20 active:scale-95 transition-all cursor-pointer"
+          >
+            <ArrowRightLeft className="w-4 h-4" />
+            <span>Transfer Antar Cabang</span>
+          </button>
+
+          <button
             onClick={() => { setIsAddModalOpen(true); resetForm(); }}
             className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-emerald-500/20 active:scale-95 transition-all cursor-pointer"
           >
@@ -443,6 +532,7 @@ export default function AdminCmsApp() {
           { id: 'orders_log', label: `Log Transaksi (${orders.length})`, icon: <Layers className="w-4 h-4" /> },
           { id: 'vouchers', label: `Kupon Promo (${vouchersList.length})`, icon: <Tag className="w-4 h-4 text-amber-500" /> },
           { id: 'store_settings', label: 'Pengaturan Toko', icon: <Settings className="w-4 h-4" /> },
+          { id: 'audit_logs', label: `Audit & Keamanan (${auditLogs.length})`, icon: <ShieldCheck className="w-4 h-4 text-rose-500" /> },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -458,6 +548,7 @@ export default function AdminCmsApp() {
           </button>
         ))}
       </div>
+
 
       {/* TAB 1: DASHBOARD ANALYTICS */}
       {activeTab === 'dashboard' && (
@@ -839,110 +930,661 @@ export default function AdminCmsApp() {
         </div>
       )}
       {activeTab === 'store_settings' && (
-        <div className="max-w-lg">
-          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm mb-6">
-            <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
-              <div className="p-2.5 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
-                <Store className="w-5 h-5" />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Settings Form Column */}
+          <div className="lg:col-span-7 space-y-6">
+            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-200 dark:border-slate-800">
+                <div className="p-3 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                  <Sliders className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Pengaturan Toko &amp; Pajak (PB1)</h3>
+                  <p className="text-xs text-slate-400">Konfigurasi profil restoran, PB1 Tax, Service Charge, dan Pembulatan Tunai</p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Pengaturan Toko</h3>
-                <p className="text-[10px] text-slate-400">Konfigurasi nama, pajak, dan profil restoran</p>
-              </div>
+
+              <form onSubmit={handleSaveSettings} className="space-y-5">
+                {/* Store Profile Section */}
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 space-y-3.5">
+                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                    <Store className="w-4 h-4 text-indigo-500" />
+                    <span>Profil Restoran</span>
+                  </div>
+
+                  <div>
+                    <label className={labelCls}>Nama Toko / Restoran</label>
+                    <input
+                      type="text"
+                      value={settingsName}
+                      onChange={(e) => setSettingsName(e.target.value)}
+                      placeholder="MyCashier Resto"
+                      className={inputCls}
+                    />
+                  </div>
+
+                  <div>
+                    <label className={labelCls}>Alamat Toko / Outlet</label>
+                    <input
+                      type="text"
+                      value={settingsAddress}
+                      onChange={(e) => setSettingsAddress(e.target.value)}
+                      placeholder="Jl. Raya No. 1, Jakarta"
+                      className={inputCls}
+                    />
+                  </div>
+
+                  <div>
+                    <label className={labelCls}>URL Logo Toko</label>
+                    <input
+                      type="text"
+                      value={settingsLogoUrl}
+                      onChange={(e) => setSettingsLogoUrl(e.target.value)}
+                      placeholder="/icon.jpg atau https://..."
+                      className={inputCls}
+                    />
+                  </div>
+                </div>
+
+                {/* Tax & Fee Configuration Section */}
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 space-y-4">
+                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                    <Percent className="w-4 h-4 text-emerald-500" />
+                    <span>Pajak (PB1) &amp; Service Charge</span>
+                  </div>
+
+                  {/* PB1 Tax Toggle & Input */}
+                  <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-xs font-bold text-slate-900 dark:text-white">Pajak Restoran (PB1)</div>
+                        <div className="text-[11px] text-slate-400">Pajak Daerah Barang &amp; Jasa Tertentu (PBJT F&amp;B)</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setSettingsEnableTax(!settingsEnableTax)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                          settingsEnableTax
+                            ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                            : 'bg-slate-200 dark:bg-slate-800 text-slate-500 border border-slate-300 dark:border-slate-700'
+                        }`}
+                      >
+                        {settingsEnableTax ? <ToggleRight className="w-4 h-4 text-emerald-500" /> : <ToggleLeft className="w-4 h-4" />}
+                        <span>{settingsEnableTax ? 'Aktif' : 'Non-Aktif'}</span>
+                      </button>
+                    </div>
+
+                    {settingsEnableTax && (
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center gap-3">
+                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300 whitespace-nowrap">Persentase PB1 (%):</label>
+                        <div className="flex-1 relative">
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="0.5"
+                            value={settingsTaxRate}
+                            onChange={(e) => setSettingsTaxRate(e.target.value)}
+                            placeholder="10"
+                            className={inputCls}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Service Charge Toggle & Input */}
+                  <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-xs font-bold text-slate-900 dark:text-white">Biaya Layanan (Service Charge)</div>
+                        <div className="text-[11px] text-slate-400">Biaya servis restoran untuk staf &amp; operasional</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setSettingsEnableServiceCharge(!settingsEnableServiceCharge)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                          settingsEnableServiceCharge
+                            ? 'bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30'
+                            : 'bg-slate-200 dark:bg-slate-800 text-slate-500 border border-slate-300 dark:border-slate-700'
+                        }`}
+                      >
+                        {settingsEnableServiceCharge ? <ToggleRight className="w-4 h-4 text-indigo-500" /> : <ToggleLeft className="w-4 h-4" />}
+                        <span>{settingsEnableServiceCharge ? 'Aktif' : 'Non-Aktif'}</span>
+                      </button>
+                    </div>
+
+                    {settingsEnableServiceCharge && (
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center gap-3">
+                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300 whitespace-nowrap">Persentase Servis (%):</label>
+                        <div className="flex-1 relative">
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="0.5"
+                            value={settingsServiceChargeRate}
+                            onChange={(e) => setSettingsServiceChargeRate(e.target.value)}
+                            placeholder="5"
+                            className={inputCls}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Cash Rounding Rule Selector */}
+                  <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+                    <label className="text-xs font-bold text-slate-900 dark:text-white flex items-center justify-between">
+                      <span>Aturan Pembulatan Kasir (Cash Rounding)</span>
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">Uang Pecahan</span>
+                    </label>
+                    <select
+                      value={settingsCashRoundingRule}
+                      onChange={(e) => setSettingsCashRoundingRule(e.target.value as CashRoundingRule)}
+                      className={inputCls}
+                    >
+                      <option value="NONE">Tanpa Pembulatan (Nominal Persis Rp 1)</option>
+                      <option value="ROUND_100">Bulatkan ke 100 Terdekat (Contoh: 10.450 -&gt; 10.500)</option>
+                      <option value="CEIL_100">Bulatkan ke Atas 100 (Ceil 100) (Contoh: 10.010 -&gt; 10.100)</option>
+                      <option value="CEIL_500">Bulatkan ke Atas 500 (Ceil 500) (Contoh: 10.100 -&gt; 10.500)</option>
+                      <option value="CEIL_1000">Bulatkan ke Atas 1.000 (Ceil 1.000) (Contoh: 10.200 -&gt; 11.000)</option>
+                    </select>
+                    <p className="text-[10px] text-slate-400">
+                      Membantu kasir menghindari kekurangan koin saat pembayaran tunai.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={settingsSaving}
+                  className={`w-full py-3.5 rounded-2xl font-extrabold text-xs flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer ${
+                    settingsSaved
+                      ? 'bg-emerald-500 text-white'
+                      : 'bg-slate-900 dark:bg-emerald-500 text-white dark:text-slate-950 hover:bg-slate-800'
+                  }`}
+                >
+                  {settingsSaved ? (
+                    <><Check className="w-4 h-4" /> Pengaturan Berhasil Disimpan!</>
+                  ) : settingsSaving ? (
+                    <span>Menyimpan Konfigurasi...</span>
+                  ) : (
+                    <><Settings className="w-4 h-4" /> Simpan Perubahan Toko</>
+                  )}
+                </button>
+              </form>
             </div>
 
-            <form onSubmit={handleSaveSettings} className="space-y-4">
+            {/* DB Connection info card */}
+            <div className={`p-3.5 rounded-2xl border text-xs flex items-start gap-2.5 ${
+              isDbConnected
+                ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-700 dark:text-emerald-400'
+                : 'bg-amber-500/5 border-amber-500/20 text-amber-700 dark:text-amber-400'
+            }`}>
+              <Database className="w-4 h-4 mt-0.5 flex-shrink-0" />
               <div>
-                <label className={labelCls}>
-                  <Store className="w-3 h-3 inline mr-1" />
-                  Nama Toko / Restoran
-                </label>
-                <input
-                  type="text"
-                  value={settingsName}
-                  onChange={(e) => setSettingsName(e.target.value)}
-                  placeholder="MyCashier Resto"
-                  className={inputCls}
-                />
+                <strong className="block font-bold">
+                  {isDbConnected ? 'Terkoneksi ke Database PostgreSQL (Neon)' : 'Mode Penyimpanan In-Memory'}
+                </strong>
+                <span className="text-[11px] opacity-90">
+                  {isDbConnected
+                    ? 'Konfigurasi tersimpan secara persisten di cloud dan langsung berlaku di Customer PWA, Kasir POS, dan Struk Thermal.'
+                    : 'Pengaturan aktif pada sesi saat ini. Hubungkan DATABASE_URL untuk persistensi permanen.'}
+                </span>
               </div>
-
-              <div>
-                <label className={labelCls}>
-                  <MapPin className="w-3 h-3 inline mr-1" />
-                  Alamat Toko
-                </label>
-                <input
-                  type="text"
-                  value={settingsAddress}
-                  onChange={(e) => setSettingsAddress(e.target.value)}
-                  placeholder="Jl. Raya No. 1, Jakarta"
-                  className={inputCls}
-                />
-              </div>
-
-              <div>
-                <label className={labelCls}>
-                  <Percent className="w-3 h-3 inline mr-1" />
-                  Persentase Pajak Resto (%)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.5"
-                  value={settingsTaxRate}
-                  onChange={(e) => setSettingsTaxRate(e.target.value)}
-                  placeholder="10"
-                  className={inputCls}
-                />
-                <p className="text-[10px] text-slate-400 mt-1">
-                  Pajak {settingsTaxRate}% akan ditambahkan ke setiap transaksi (subtotal × {(1 + Number(settingsTaxRate)/100).toFixed(2)})
-                </p>
-              </div>
-
-              <div>
-                <label className={labelCls}>URL Logo Toko</label>
-                <input
-                  type="text"
-                  value={settingsLogoUrl}
-                  onChange={(e) => setSettingsLogoUrl(e.target.value)}
-                  placeholder="/icon.jpg atau https://..."
-                  className={inputCls}
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={settingsSaving}
-                className={`w-full py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer ${
-                  settingsSaved
-                    ? 'bg-emerald-500 text-white'
-                    : 'bg-slate-900 dark:bg-emerald-500 text-white dark:text-slate-950 hover:bg-slate-800'
-                }`}
-              >
-                {settingsSaved ? (
-                  <><Check className="w-4 h-4" /> Pengaturan Tersimpan!</>
-                ) : settingsSaving ? (
-                  <span>Menyimpan...</span>
-                ) : (
-                  <><Settings className="w-4 h-4" /> Simpan Pengaturan Toko</>
-                )}
-              </button>
-            </form>
+            </div>
           </div>
 
-          {/* DB info */}
-          <div className={`p-3 rounded-2xl border text-[10px] flex items-start gap-2 ${
-            isDbConnected
-              ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-700 dark:text-emerald-400'
-              : 'bg-amber-500/5 border-amber-500/20 text-amber-700 dark:text-amber-400'
-          }`}>
-            <Database className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-            <span>
-              {isDbConnected
-                ? 'Pengaturan disimpan ke PostgreSQL (Neon) dan persist setelah refresh.'
-                : 'Mode in-memory: pengaturan hilang saat refresh. Tambahkan DATABASE_URL ke .env.local.'}
-            </span>
+          {/* Live Preview Calculation Simulation Card */}
+          <div className="lg:col-span-5 space-y-6">
+            <div className="p-6 rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 text-white border border-indigo-500/30 shadow-xl space-y-5">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-400">
+                    <Calculator className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black uppercase tracking-wider text-indigo-300">Live Preview Simulasi</h4>
+                    <p className="text-[10px] text-slate-400">Kalkulasi Pajak &amp; Biaya Realtime</p>
+                  </div>
+                </div>
+                <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">
+                  Dynamic Engine
+                </span>
+              </div>
+
+              {/* Sample Subtotal Input */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-300 flex justify-between">
+                  <span>Simulasi Subtotal Menu:</span>
+                  <span className="text-emerald-400 font-bold">{formatRupiah(simulatedSubtotal)}</span>
+                </label>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {[50000, 100000, 155550, 250000].map((val) => (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => setSimulatedSubtotal(val)}
+                      className={`py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
+                        simulatedSubtotal === val
+                          ? 'bg-indigo-600 border-indigo-400 text-white'
+                          : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'
+                      }`}
+                    >
+                      {val >= 1000 ? `${val / 1000}k` : val}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="number"
+                  step="500"
+                  value={simulatedSubtotal}
+                  onChange={(e) => setSimulatedSubtotal(Math.max(0, Number(e.target.value)))}
+                  className="w-full mt-2 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-white focus:outline-none focus:border-indigo-400"
+                />
+              </div>
+
+              {/* Live Calculation Engine Output */}
+              {(() => {
+                const previewTotals = calculateOrderTotals(
+                  simulatedSubtotal,
+                  0,
+                  {
+                    taxRate: Number(settingsTaxRate),
+                    serviceChargeRate: Number(settingsServiceChargeRate),
+                    enableTax: settingsEnableTax,
+                    enableServiceCharge: settingsEnableServiceCharge,
+                    cashRoundingRule: settingsCashRoundingRule,
+                  },
+                  true
+                );
+
+                return (
+                  <div className="space-y-2.5 text-xs bg-slate-950/60 p-4 rounded-2xl border border-slate-800 font-mono">
+                    <div className="flex justify-between text-slate-400">
+                      <span>Subtotal Menu:</span>
+                      <span className="text-slate-200">{formatRupiah(previewTotals.subtotal)}</span>
+                    </div>
+
+                    <div className="flex justify-between text-slate-400">
+                      <span>Service Charge ({previewTotals.serviceChargeRate}%):</span>
+                      <span className={previewTotals.serviceChargeAmount > 0 ? 'text-indigo-400' : 'text-slate-600'}>
+                        {formatRupiah(previewTotals.serviceChargeAmount)}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between text-slate-400">
+                      <span>Dasar Pajak (DPP):</span>
+                      <span className="text-slate-400">{formatRupiah(previewTotals.taxableAmount)}</span>
+                    </div>
+
+                    <div className="flex justify-between text-slate-400">
+                      <span>Pajak Resto PB1 ({previewTotals.taxRate}%):</span>
+                      <span className={previewTotals.taxAmount > 0 ? 'text-amber-400' : 'text-slate-600'}>
+                        {formatRupiah(previewTotals.taxAmount)}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between text-slate-400">
+                      <span>Total Sebelum Bulat:</span>
+                      <span className="text-slate-300">{formatRupiah(previewTotals.rawTotal)}</span>
+                    </div>
+
+                    <div className="flex justify-between text-slate-400">
+                      <span>Pembulatan ({settingsCashRoundingRule}):</span>
+                      <span className={previewTotals.roundingAdjustment !== 0 ? 'text-cyan-400 font-bold' : 'text-slate-600'}>
+                        {previewTotals.roundingAdjustment > 0 ? '+' : ''}{formatRupiah(previewTotals.roundingAdjustment)}
+                      </span>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-800 flex justify-between items-center text-sm font-black text-white">
+                      <span>TOTAL LUNAS KASIR:</span>
+                      <span className="text-emerald-400 text-base">{formatRupiah(previewTotals.finalTotal)}</span>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Mini Receipt Preview */}
+              <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-[10px] text-slate-400 space-y-1 font-mono">
+                <div className="text-center font-bold text-slate-300">{settingsName.toUpperCase()}</div>
+                <div className="text-center text-[9px] text-slate-500">{settingsAddress}</div>
+                <div className="text-center text-[9px] text-slate-600">--------------------------------</div>
+                <div className="flex justify-between">
+                  <span>PB1 ({settingsEnableTax ? `${settingsTaxRate}%` : 'OFF'}):</span>
+                  <span>{settingsEnableTax ? 'Aktif' : 'Nonaktif'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Service ({settingsEnableServiceCharge ? `${settingsServiceChargeRate}%` : 'OFF'}):</span>
+                  <span>{settingsEnableServiceCharge ? 'Aktif' : 'Nonaktif'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Rounding:</span>
+                  <span>{settingsCashRoundingRule}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── TAB 7: SECURITY AUDIT TRAIL & ACTIVITY LOGGING ───────────────── */}
+      {activeTab === 'audit_logs' && (
+        <div className="space-y-6">
+          {/* Summary Stat Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+              <div className="flex justify-between items-center text-xs text-slate-500 mb-2 font-medium">
+                <span>Total Aktivitas Tercatat</span>
+                <ShieldCheck className="w-4 h-4 text-indigo-500" />
+              </div>
+              <div className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white">
+                {auditLogs.length}
+              </div>
+              <p className="text-[10px] text-slate-400 mt-1">Append-only security log ledger</p>
+            </div>
+
+            <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+              <div className="flex justify-between items-center text-xs text-slate-500 mb-2 font-medium">
+                <span>Mutasi Master Menu</span>
+                <Package className="w-4 h-4 text-emerald-500" />
+              </div>
+              <div className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white">
+                {auditLogs.filter((l) => l.entityType === 'menu').length}
+              </div>
+              <p className="text-[10px] text-slate-400 mt-1">Perubahan harga, create, delete</p>
+            </div>
+
+            <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+              <div className="flex justify-between items-center text-xs text-slate-500 mb-2 font-medium">
+                <span>Konfigurasi Toko &amp; Pajak</span>
+                <Settings className="w-4 h-4 text-amber-500" />
+              </div>
+              <div className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white">
+                {auditLogs.filter((l) => l.entityType === 'store_settings').length}
+              </div>
+              <p className="text-[10px] text-slate-400 mt-1">PB1, Service charge &amp; Rounding</p>
+            </div>
+
+            <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+              <div className="flex justify-between items-center text-xs text-slate-500 mb-2 font-medium">
+                <span>Keamanan &amp; Sesi Login</span>
+                <Lock className="w-4 h-4 text-rose-500" />
+              </div>
+              <div className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white">
+                {auditLogs.filter((l) => l.entityType === 'auth' || l.status === 'FAILURE').length}
+              </div>
+              <p className="text-[10px] text-slate-400 mt-1">Login PIN, logout, insiden keamanan</p>
+            </div>
+          </div>
+
+          {/* Search, Filter & Action Toolbar */}
+          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+              {/* Keyword Search */}
+              <div className="relative w-full md:w-80">
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={auditSearch}
+                  onChange={(e) => setAuditSearch(e.target.value)}
+                  placeholder="Cari deskripsi, aktor, ID, atau IP..."
+                  className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 border border-transparent focus:border-indigo-500"
+                />
+                {auditSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setAuditSearch('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Filters & Export Button */}
+              <div className="flex items-center gap-2 flex-wrap w-full md:w-auto justify-end">
+                {/* Role Filter */}
+                <select
+                  value={auditRoleFilter}
+                  onChange={(e) => setAuditRoleFilter(e.target.value)}
+                  className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer"
+                >
+                  <option value="ALL">Semua Role</option>
+                  <option value="admin">Admin CMS</option>
+                  <option value="cashier">Kasir POS</option>
+                  <option value="kitchen">Chef Dapur</option>
+                  <option value="customer">Pelanggan</option>
+                </select>
+
+                {/* Action Filter */}
+                <select
+                  value={auditActionFilter}
+                  onChange={(e) => setAuditActionFilter(e.target.value)}
+                  className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer"
+                >
+                  <option value="ALL">Semua Tipe Aksi</option>
+                  <option value="MENU_PRICE_UPDATE">Update Harga Menu</option>
+                  <option value="MENU_CREATE">Tambah Menu Baru</option>
+                  <option value="MENU_DELETE">Hapus Menu</option>
+                  <option value="MENU_TOGGLE_AVAILABILITY">Toggle Ketersediaan</option>
+                  <option value="STORE_SETTINGS_UPDATE">Update Pengaturan Toko</option>
+                  <option value="USER_LOGIN">User Login</option>
+                  <option value="LOGIN_FAILURE">Login Gagal</option>
+                  <option value="USER_LOGOUT">User Logout</option>
+                  <option value="STOCK_TRANSFER_INITIATE">Inisiasi Transfer Stok</option>
+                  <option value="STOCK_TRANSFER_APPROVE">Persetujuan Transfer Stok</option>
+                  <option value="STOCK_TRANSFER_COMPLETED">Transfer Selesai</option>
+                  <option value="STOCK_MANUAL_OVERRIDE">Penyesuaian Manual Stok</option>
+                </select>
+
+                {/* Status Filter */}
+                <select
+                  value={auditStatusFilter}
+                  onChange={(e) => setAuditStatusFilter(e.target.value)}
+                  className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer"
+                >
+                  <option value="ALL">Semua Status</option>
+                  <option value="SUCCESS">SUKSES (Success)</option>
+                  <option value="FAILURE">GAGAL (Failure)</option>
+                </select>
+
+                {/* Refresh Button */}
+                <button
+                  type="button"
+                  onClick={fetchAuditLogs}
+                  disabled={auditLoading}
+                  className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 cursor-pointer transition-all"
+                  title="Muat Ulang Data Log"
+                >
+                  <RefreshCw className={`w-4 h-4 ${auditLoading ? 'animate-spin' : ''}`} />
+                </button>
+
+                {/* CSV Export Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const params = new URLSearchParams();
+                    params.set('format', 'csv');
+                    if (auditSearch) params.set('search', auditSearch);
+                    if (auditRoleFilter !== 'ALL') params.set('userRole', auditRoleFilter);
+                    if (auditActionFilter !== 'ALL') params.set('actionType', auditActionFilter);
+                    if (auditStatusFilter !== 'ALL') params.set('status', auditStatusFilter);
+                    window.open(`/api/audit-logs?${params.toString()}`, '_blank');
+                  }}
+                  className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/20 active:scale-95 transition-all cursor-pointer"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5" />
+                  <span>Ekspor CSV</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Interactive Audit Logs Table */}
+          <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-200 dark:border-slate-800">
+                  <tr>
+                    <th className="px-4 py-3.5">Waktu Kejadian</th>
+                    <th className="px-4 py-3.5">Aktor &amp; Role</th>
+                    <th className="px-4 py-3.5">Tipe Aksi</th>
+                    <th className="px-4 py-3.5">Entitas Target</th>
+                    <th className="px-4 py-3.5">Deskripsi Mutasi</th>
+                    <th className="px-4 py-3.5">Status</th>
+                    <th className="px-4 py-3.5">IP &amp; Device</th>
+                    <th className="px-4 py-3.5 text-center">Inspeksi Diff</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                  {auditLogs.length > 0 ? (
+                    auditLogs.map((log) => {
+                      const dateObj = new Date(log.timestamp);
+                      const isFailure = log.status === 'FAILURE';
+
+                      return (
+                        <tr
+                          key={log.id}
+                          className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                        >
+                          {/* Waktu */}
+                          <td className="px-4 py-3.5 whitespace-nowrap">
+                            <div className="font-bold text-slate-900 dark:text-white">
+                              {dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                            </div>
+                            <div className="text-[10px] text-slate-400">
+                              {dateObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
+                            </div>
+                          </td>
+
+                          {/* Aktor & Role */}
+                          <td className="px-4 py-3.5 whitespace-nowrap">
+                            <div className="font-bold text-slate-900 dark:text-white truncate max-w-[140px]">
+                              {log.userName || log.userId}
+                            </div>
+                            <div className="mt-0.5">
+                              <span
+                                className={`px-1.5 py-0.5 rounded text-[9px] font-bold border ${
+                                  log.userRole === 'admin'
+                                    ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30'
+                                    : log.userRole === 'cashier'
+                                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                                    : log.userRole === 'kitchen'
+                                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                                    : 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/30'
+                                }`}
+                              >
+                                {log.userRole.toUpperCase()}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Tipe Aksi */}
+                          <td className="px-4 py-3.5 whitespace-nowrap">
+                            <span
+                              className={`px-2 py-1 rounded-lg text-[10px] font-bold border ${
+                                log.actionType.includes('DELETE') || log.actionType.includes('FAILURE')
+                                  ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30'
+                                  : log.actionType.includes('UPDATE') || log.actionType.includes('OVERRIDE')
+                                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                                  : log.actionType.includes('CREATE') || log.actionType.includes('LOGIN')
+                                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                                  : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30'
+                              }`}
+                            >
+                              {log.actionType}
+                            </span>
+                          </td>
+
+                          {/* Resource */}
+                          <td className="px-4 py-3.5 whitespace-nowrap">
+                            <div className="font-bold text-slate-800 dark:text-slate-200 capitalize">
+                              {log.entityType}
+                            </div>
+                            <div className="text-[10px] text-slate-400 font-mono truncate max-w-[120px]">
+                              {log.entityId || 'Global'}
+                            </div>
+                          </td>
+
+                          {/* Deskripsi */}
+                          <td className="px-4 py-3.5 max-w-xs">
+                            <p className="text-slate-700 dark:text-slate-300 font-medium line-clamp-2 leading-relaxed">
+                              {log.description}
+                            </p>
+                          </td>
+
+                          {/* Status */}
+                          <td className="px-4 py-3.5 whitespace-nowrap">
+                            {isFailure ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                                <XCircle className="w-3 h-3" /> GAGAL
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                <CheckCircle2 className="w-3 h-3" /> SUKSES
+                              </span>
+                            )}
+                          </td>
+
+                          {/* IP & Device */}
+                          <td className="px-4 py-3.5 whitespace-nowrap">
+                            <div className="font-mono text-[11px] text-slate-600 dark:text-slate-400">
+                              {log.ipAddress || '127.0.0.1'}
+                            </div>
+                            <div className="text-[9px] text-slate-400 truncate max-w-[100px]" title={log.userAgent}>
+                              {log.userAgent ? log.userAgent.split(' ')[0] : 'Browser/POS'}
+                            </div>
+                          </td>
+
+                          {/* Diff Inspection Action */}
+                          <td className="px-4 py-3.5 text-center whitespace-nowrap">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedLogForDiff(log);
+                                setIsDiffModalOpen(true);
+                              }}
+                              className="px-3 py-1.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 font-bold text-xs flex items-center gap-1.5 mx-auto border border-indigo-500/30 active:scale-95 transition-all cursor-pointer"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>Diff</span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={8} className="py-12 text-center text-slate-500">
+                        <ShieldAlert className="w-8 h-8 mx-auto mb-2 text-slate-400" />
+                        <p className="font-bold text-sm">Tidak ada log aktivitas audit ditemukan</p>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          {auditSearch || auditRoleFilter !== 'ALL' || auditActionFilter !== 'ALL' || auditStatusFilter !== 'ALL'
+                            ? 'Coba sesuaikan kata kunci atau filter pencarian Anda.'
+                            : 'Log mutasi audit akan muncul otomatis saat ada aktivitas.'}
+                        </p>
+                        {(auditSearch || auditRoleFilter !== 'ALL' || auditActionFilter !== 'ALL' || auditStatusFilter !== 'ALL') && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAuditSearch('');
+                              setAuditRoleFilter('ALL');
+                              setAuditActionFilter('ALL');
+                              setAuditStatusFilter('ALL');
+                            }}
+                            className="mt-3 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
+                          >
+                            Reset Semua Filter
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -962,6 +1604,7 @@ export default function AdminCmsApp() {
                 <X className="w-5 h-5" />
               </button>
             </div>
+
 
             <MenuFormFields
               name={name} setName={setName} nameEn={nameEn} setNameEn={setNameEn}
@@ -1029,6 +1672,12 @@ export default function AdminCmsApp() {
         onClose={() => setIsInventoryModalOpen(false)}
       />
 
+      {/* Inter-Branch Transfer Hub Modal */}
+      <TransferHubModal
+        isOpen={isTransferHubOpen}
+        onClose={() => setIsTransferHubOpen(false)}
+      />
+
       {/* Table Floor Map & QR Standee Modal */}
       <TableMapModal
         isOpen={isTableMapOpen}
@@ -1044,7 +1693,18 @@ export default function AdminCmsApp() {
         totalRevenue={totalRevenue}
       />
 
+      {/* Security Audit Trail Diff Visualizer Modal */}
+      <AuditDiffModal
+        isOpen={isDiffModalOpen}
+        onClose={() => {
+          setIsDiffModalOpen(false);
+          setSelectedLogForDiff(null);
+        }}
+        log={selectedLogForDiff}
+      />
+
       {/* ─── NEW STORE MULTI-TENANT REGISTRATION MODAL ───────────────────────── */}
+
       {isNewStoreModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
           <form

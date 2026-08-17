@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ShoppingBag, Monitor, ShieldCheck, HelpCircle } from 'lucide-react';
+import { ShoppingBag, Monitor, UtensilsCrossed, ShieldCheck, HelpCircle } from 'lucide-react';
 
 interface BottomNavProps {
   onRestartOnboarding: () => void;
@@ -15,6 +15,7 @@ export default function BottomNav({ onRestartOnboarding }: BottomNavProps) {
   const items = [
     { href: '/', label: 'User PWA', path: '/', icon: <ShoppingBag className="w-5 h-5" /> },
     { href: '/cashier', label: 'Kasir POS', path: '/cashier', icon: <Monitor className="w-5 h-5" /> },
+    { href: '/kitchen', label: 'Dapur KDS', path: '/kitchen', icon: <UtensilsCrossed className="w-5 h-5" /> },
     { href: '/admin', label: 'Admin CMS', path: '/admin', icon: <ShieldCheck className="w-5 h-5" /> },
   ];
 

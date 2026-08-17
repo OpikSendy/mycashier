@@ -4,11 +4,12 @@ import React, { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { TRANSLATIONS } from '@/data/translations';
 import { MenuItem } from '@/data/initialData';
+import { calculateOrderTotals, formatRupiah } from '@/lib/taxEngine';
 import { Search, Plus, Minus, ShoppingBag, Sparkles, CheckCircle2, MessageSquare, QrCode, X, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 
 export default function CustomerView() {
-  const { language, selectedTable, menu, cart, addToCart, updateCartQuantity, clearCart, createOrder } = useApp();
+  const { language, selectedTable, menu, cart, addToCart, updateCartQuantity, clearCart, createOrder, storeSettings } = useApp();
   const t = TRANSLATIONS[language].customer;
 
   const [activeCategory, setActiveCategory] = useState<'all' | 'food' | 'drinks' | 'dessert' | 'snack'>('all');
@@ -27,8 +28,8 @@ export default function CustomerView() {
   });
 
   const cartSubtotal = cart.reduce((sum, c) => sum + c.item.price * c.quantity, 0);
-  const cartTax = cartSubtotal * 0.1;
-  const cartTotal = cartSubtotal + cartTax;
+  const cartTotals = calculateOrderTotals(cartSubtotal, 0, storeSettings, false);
+  const cartTotal = cartTotals.finalTotal;
   const totalItemCount = cart.reduce((sum, c) => sum + c.quantity, 0);
 
   const handleConfirmAddToCart = (e: React.FormEvent) => {
@@ -328,15 +329,29 @@ export default function CustomerView() {
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 text-xs mb-6">
                 <div className="flex justify-between text-slate-600 dark:text-slate-400">
                   <span>{t.subtotal}</span>
-                  <span>Rp {cartSubtotal.toLocaleString('id-ID')}</span>
+                  <span>{formatRupiah(cartTotals.subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-slate-600 dark:text-slate-400">
-                  <span>{t.tax}</span>
-                  <span>Rp {cartTax.toLocaleString('id-ID')}</span>
-                </div>
+                {cartTotals.serviceChargeAmount > 0 && (
+                  <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                    <span>{t.serviceCharge} ({cartTotals.serviceChargeRate}%)</span>
+                    <span>{formatRupiah(cartTotals.serviceChargeAmount)}</span>
+                  </div>
+                )}
+                {cartTotals.taxAmount > 0 && (
+                  <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                    <span>{t.tax} ({cartTotals.taxRate}%)</span>
+                    <span>{formatRupiah(cartTotals.taxAmount)}</span>
+                  </div>
+                )}
+                {cartTotals.roundingAdjustment !== 0 && (
+                  <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                    <span>{t.rounding}</span>
+                    <span>{cartTotals.roundingAdjustment > 0 ? '+' : ''}{formatRupiah(cartTotals.roundingAdjustment)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm font-black text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-800">
                   <span>{t.total}</span>
-                  <span className="text-emerald-500">Rp {cartTotal.toLocaleString('id-ID')}</span>
+                  <span className="text-emerald-500">{formatRupiah(cartTotals.finalTotal)}</span>
                 </div>
               </div>
             </div>

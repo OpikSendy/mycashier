@@ -1,16 +1,42 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import OnboardingView from '@/features/onboarding/OnboardingView';
 import UserPwaApp from '@/features/user-pwa/UserPwaApp';
 import ErrorBoundary from '@/components/ui/ErrorBoundary';
 import AiChatWidget from '@/features/ai-assistant/AiChatWidget';
+import QuickPinPadModal from '@/components/auth/QuickPinPadModal';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useApp } from '@/context/AppContext';
+import { useApp, UserRole } from '@/context/AppContext';
 import { QrCode, Globe, Sun, Moon, Lock, MapPin } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 
 import PwaInstallButton from '@/components/pwa/PwaInstallButton';
+
+function AuthRequiredListener() {
+  const searchParams = useSearchParams();
+  const authRequired = searchParams.get('authRequired') as UserRole | null;
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (authRequired && ['cashier', 'kitchen', 'admin'].includes(authRequired)) {
+      setIsOpen(true);
+    }
+  }, [authRequired]);
+
+  if (!isOpen || !authRequired) return null;
+
+  return (
+    <QuickPinPadModal
+      requiredRole={authRequired}
+      initialRole={authRequired}
+      isOpen={isOpen}
+      onClose={() => setIsOpen(false)}
+      redirectOnSuccess={`/${authRequired}`}
+    />
+  );
+}
 
 export default function Home() {
   const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
@@ -111,6 +137,11 @@ export default function Home() {
 
       {/* Ask MyCashier AI Assistant */}
       <AiChatWidget />
+
+      {/* URL Auth Required Modal Guard */}
+      <Suspense fallback={null}>
+        <AuthRequiredListener />
+      </Suspense>
     </main>
   );
 }

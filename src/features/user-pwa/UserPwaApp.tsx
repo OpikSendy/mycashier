@@ -28,6 +28,7 @@ import {
 import Image from 'next/image';
 import TablePickerSelect from '@/components/common/TablePickerSelect';
 import { ProductCardSkeleton } from '@/components/ui/SkeletonCard';
+import { calculateOrderTotals, formatRupiah } from '@/lib/taxEngine';
 
 export default function UserPwaApp() {
   const {
@@ -43,6 +44,7 @@ export default function UserPwaApp() {
     createOrder,
     markOrderPaid,
     orders,
+    storeSettings,
   } = useApp();
   const t = TRANSLATIONS[language].customer;
 
@@ -142,8 +144,9 @@ export default function UserPwaApp() {
 
   // Cart Computations
   const cartSubtotal = cart.reduce((sum, c) => sum + c.item.price * c.quantity, 0);
-  const cartTax = cartSubtotal * 0.1;
-  const cartTotal = cartSubtotal + cartTax;
+  const cartDiscount = appliedVoucher?.discount || 0;
+  const cartTotals = calculateOrderTotals(cartSubtotal, cartDiscount, storeSettings, false);
+  const cartTotal = cartTotals.finalTotal;
   const totalItemCount = cart.reduce((sum, c) => sum + c.quantity, 0);
 
   const myTableOrders = orders.filter((o) => o.tableNumber === selectedTable);
@@ -884,22 +887,36 @@ export default function UserPwaApp() {
                   <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 text-xs space-y-1.5">
                     <div className="flex justify-between text-slate-500">
                       <span>Subtotal</span>
-                      <span>Rp {cartSubtotal.toLocaleString('id-ID')}</span>
-                    </div>
-                    <div className="flex justify-between text-slate-500">
-                      <span>Pajak Resto (10%)</span>
-                      <span>Rp {cartTax.toLocaleString('id-ID')}</span>
+                      <span>{formatRupiah(cartTotals.subtotal)}</span>
                     </div>
                     {appliedVoucher && (
                       <div className="flex justify-between text-emerald-600 font-bold">
                         <span>Diskon Kupon ({appliedVoucher.code})</span>
-                        <span>- Rp {appliedVoucher.discount.toLocaleString('id-ID')}</span>
+                        <span>- {formatRupiah(cartTotals.discountAmount)}</span>
+                      </div>
+                    )}
+                    {cartTotals.serviceChargeAmount > 0 && (
+                      <div className="flex justify-between text-slate-500">
+                        <span>Biaya Layanan ({cartTotals.serviceChargeRate}%)</span>
+                        <span>{formatRupiah(cartTotals.serviceChargeAmount)}</span>
+                      </div>
+                    )}
+                    {cartTotals.taxAmount > 0 && (
+                      <div className="flex justify-between text-slate-500">
+                        <span>Pajak Resto PB1 ({cartTotals.taxRate}%)</span>
+                        <span>{formatRupiah(cartTotals.taxAmount)}</span>
+                      </div>
+                    )}
+                    {cartTotals.roundingAdjustment !== 0 && (
+                      <div className="flex justify-between text-slate-500">
+                        <span>Pembulatan</span>
+                        <span>{cartTotals.roundingAdjustment > 0 ? '+' : ''}{formatRupiah(cartTotals.roundingAdjustment)}</span>
                       </div>
                     )}
                     <div className="flex justify-between font-black text-sm text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-800">
                       <span>Total Tagihan</span>
                       <span className="text-emerald-600 dark:text-emerald-400">
-                        Rp {Math.max(0, cartTotal - (appliedVoucher?.discount || 0)).toLocaleString('id-ID')}
+                        {formatRupiah(cartTotals.finalTotal)}
                       </span>
                     </div>
                   </div>

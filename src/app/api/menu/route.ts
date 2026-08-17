@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, isDbConfigured } from '@/lib/db';
 import { INITIAL_MENU } from '@/data/initialData';
+import { createAuditLog, extractReqMetadata } from '@/lib/audit';
 
 /**
  * GET /api/menu
@@ -41,6 +42,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
+    const { ipAddress, userAgent } = extractReqMetadata(req);
     const {
       name, nameEn, category, subCategory, variantPreset,
       price, description, descriptionEn, image, isAvailable, isPopular,
@@ -72,9 +74,25 @@ export async function POST(req: NextRequest) {
     `) as any[];
     const row = rows[0];
 
+    // Record audit log for menu item creation
+    await createAuditLog({
+      userId: 'usr-admin-cms',
+      userName: 'Admin Store',
+      userRole: 'admin',
+      actionType: 'MENU_CREATE',
+      entityType: 'menu',
+      entityId: id,
+      ipAddress,
+      userAgent,
+      description: `Menambahkan menu baru '${name}' seharga Rp ${Number(price).toLocaleString('id-ID')}`,
+      newPayload: row,
+      status: 'SUCCESS',
+    });
+
     return NextResponse.json({ data: row }, { status: 201 });
   } catch (error: any) {
     console.error('[POST /api/menu]', error.message);
     return NextResponse.json({ error: 'Failed to create menu item' }, { status: 500 });
   }
 }
+

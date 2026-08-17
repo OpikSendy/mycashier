@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
-import { Smartphone, Monitor, ShieldCheck, Sun, Moon, Globe, QrCode, LogOut, Lock } from 'lucide-react';
+import { Smartphone, Monitor, UtensilsCrossed, ShieldCheck, Sun, Moon, Globe, QrCode, LogOut, Lock } from 'lucide-react';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -16,8 +16,17 @@ export default function Navbar() {
   const navLinks = [
     { href: '/', label: 'User PWA', path: '/', icon: <Smartphone className="w-4 h-4" /> },
     { href: '/cashier', label: 'Kasir POS', path: '/cashier', icon: <Monitor className="w-4 h-4" /> },
+    { href: '/kitchen', label: 'Dapur KDS', path: '/kitchen', icon: <UtensilsCrossed className="w-4 h-4" /> },
     { href: '/admin', label: 'Admin CMS', path: '/admin', icon: <ShieldCheck className="w-4 h-4" /> },
   ];
+
+  const isLinkProtected = (path: string): boolean => {
+    if (path === '/') return false;
+    if (path === '/cashier') return authRole !== 'cashier' && authRole !== 'admin';
+    if (path === '/kitchen') return authRole !== 'kitchen' && authRole !== 'cashier' && authRole !== 'admin';
+    if (path === '/admin') return authRole !== 'admin';
+    return false;
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 select-none shadow-sm">
@@ -41,7 +50,7 @@ export default function Navbar() {
         <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
           {navLinks.map((link) => {
             const isActive = pathname === link.path;
-            const isProtected = link.path !== '/' && authRole !== link.path.replace('/', '');
+            const isProtected = isLinkProtected(link.path);
             return (
               <Link
                 key={link.href}

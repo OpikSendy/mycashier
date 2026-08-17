@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useApp } from '@/context/AppContext';
 import { TRANSLATIONS } from '@/data/translations';
 import { Order, PaymentMethod, MenuItem } from '@/data/initialData';
@@ -27,10 +28,10 @@ import {
   Bell,
   Split,
 } from 'lucide-react';
-import Image from 'next/image';
 import { useOrderNotification } from '@/hooks/useOrderNotification';
 import ThermalReceiptModal from '@/components/common/ThermalReceiptModal';
 import SplitBillModal from './SplitBillModal';
+import { calculateOrderTotals, formatRupiah } from '@/lib/taxEngine';
 
 export default function CashierPosApp() {
   const { language, menu, orders, cart, addToCart, updateCartQuantity, clearCart, createOrder, markOrderPaid, storeSettings } = useApp();
@@ -80,8 +81,8 @@ export default function CashierPosApp() {
   });
 
   const cartSubtotal = cart.reduce((sum, c) => sum + c.item.price * c.quantity, 0);
-  const cartTax = cartSubtotal * 0.1;
-  const cartTotal = cartSubtotal + cartTax;
+  const cartTotals = calculateOrderTotals(cartSubtotal, 0, storeSettings, selectedPaymentMethod === 'CASH');
+  const cartTotal = cartTotals.finalTotal;
 
   const handleCreateWalkInAndPay = (method: PaymentMethod) => {
     if (cart.length === 0) return;
@@ -308,15 +309,29 @@ export default function CashierPosApp() {
                 <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-xs space-y-1.5">
                   <div className="flex justify-between text-slate-500">
                     <span>Subtotal:</span>
-                    <span>Rp {cartSubtotal.toLocaleString('id-ID')}</span>
+                    <span>{formatRupiah(cartTotals.subtotal)}</span>
                   </div>
-                  <div className="flex justify-between text-slate-500">
-                    <span>Pajak Resto (10%):</span>
-                    <span>Rp {cartTax.toLocaleString('id-ID')}</span>
-                  </div>
+                  {cartTotals.serviceChargeAmount > 0 && (
+                    <div className="flex justify-between text-slate-500">
+                      <span>Biaya Layanan ({cartTotals.serviceChargeRate}%):</span>
+                      <span>{formatRupiah(cartTotals.serviceChargeAmount)}</span>
+                    </div>
+                  )}
+                  {cartTotals.taxAmount > 0 && (
+                    <div className="flex justify-between text-slate-500">
+                      <span>Pajak Resto PB1 ({cartTotals.taxRate}%):</span>
+                      <span>{formatRupiah(cartTotals.taxAmount)}</span>
+                    </div>
+                  )}
+                  {cartTotals.roundingAdjustment !== 0 && (
+                    <div className="flex justify-between text-slate-500">
+                      <span>Pembulatan:</span>
+                      <span>{cartTotals.roundingAdjustment > 0 ? '+' : ''}{formatRupiah(cartTotals.roundingAdjustment)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between font-black text-slate-900 dark:text-white text-sm pt-2 border-t border-slate-200 dark:border-slate-700">
                     <span>Total POS:</span>
-                    <span className="text-emerald-600 dark:text-emerald-400">Rp {cartTotal.toLocaleString('id-ID')}</span>
+                    <span className="text-emerald-600 dark:text-emerald-400">{formatRupiah(cartTotals.finalTotal)}</span>
                   </div>
                 </div>
 
@@ -495,6 +510,7 @@ export default function CashierPosApp() {
           storeName={storeSettings?.name}
           storeAddress={storeSettings?.address}
           taxRate={storeSettings?.taxRate}
+          settings={storeSettings}
         />
       )}
 

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import AdminCmsApp from '@/features/admin-cms/AdminCmsApp';
 import AiChatWidget from '@/features/ai-assistant/AiChatWidget';
-import AuthGuardModal from '@/components/auth/AuthGuardModal';
+import QuickPinPadModal from '@/components/auth/QuickPinPadModal';
 import { useApp } from '@/context/AppContext';
 import { ShieldCheck, LogOut, Sun, Moon, Globe } from 'lucide-react';
 
@@ -70,7 +70,7 @@ export default function AdminPage() {
       </header>
 
       {!isAllowed ? (
-        <AuthGuardModal requiredRole="admin" title="Admin CMS Master Control" />
+        <QuickPinPadModal requiredRole="admin" title="Admin CMS Master Control" />
       ) : (
         <AdminCmsApp />
       )}

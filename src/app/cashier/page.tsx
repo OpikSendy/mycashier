@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import CashierPosApp from '@/features/cashier-pos/CashierPosApp';
 import AiChatWidget from '@/features/ai-assistant/AiChatWidget';
-import AuthGuardModal from '@/components/auth/AuthGuardModal';
+import QuickPinPadModal from '@/components/auth/QuickPinPadModal';
 import { useApp } from '@/context/AppContext';
 import { Monitor, LogOut, Sun, Moon, Globe } from 'lucide-react';
 
@@ -70,7 +70,7 @@ export default function CashierPage() {
       </header>
 
       {!isAllowed ? (
-        <AuthGuardModal requiredRole="cashier" title="Stasiun Kasir POS" />
+        <QuickPinPadModal requiredRole="cashier" title="Stasiun Kasir POS" />
       ) : (
         <CashierPosApp />
       )}

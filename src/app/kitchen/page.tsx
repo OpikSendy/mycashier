@@ -14,7 +14,7 @@ import PwaInstallButton from '@/components/pwa/PwaInstallButton';
 export default function KitchenPage() {
   const { authRole, logout, theme, toggleTheme, language, toggleLanguage } = useApp();
 
-  const isAllowed = authRole === 'cashier' || authRole === 'admin';
+  const isAllowed = authRole === 'kitchen' || authRole === 'cashier' || authRole === 'admin';
 
   return (
     <main className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 relative selection:bg-emerald-500 selection:text-slate-950">
@@ -70,7 +70,7 @@ export default function KitchenPage() {
       </header>
 
       {!isAllowed ? (
-        <AuthGuardModal requiredRole="cashier" title="Papan Tiket Dapur KDS" />
+        <AuthGuardModal requiredRole="kitchen" title="Papan Tiket Dapur KDS" />
       ) : (
         <KitchenView />
       )}

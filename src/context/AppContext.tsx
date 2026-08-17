@@ -2,10 +2,18 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { MenuItem, Order, INITIAL_MENU, INITIAL_ORDERS, OrderStatus, PaymentMethod } from '@/data/initialData';
+import { calculateOrderTotals, CashRoundingRule } from '@/lib/taxEngine';
 
-export type UserRole = 'customer' | 'cashier' | 'admin';
+export type UserRole = 'customer' | 'cashier' | 'kitchen' | 'admin';
 export type Theme = 'dark' | 'light';
 export type Language = 'ID' | 'EN';
+
+export interface AuthSession {
+  userId: string;
+  name: string;
+  role: UserRole;
+  branchId?: string;
+}
 
 export interface CartItem {
   item: MenuItem;
@@ -19,6 +27,10 @@ export interface StoreSettings {
   logoUrl: string;
   address: string;
   taxRate: number; // percentage e.g. 10 = 10%
+  serviceChargeRate: number; // percentage e.g. 5 = 5%
+  enableTax: boolean;
+  enableServiceCharge: boolean;
+  cashRoundingRule: CashRoundingRule;
 }
 
 export interface Branch {
@@ -54,8 +66,10 @@ export const INITIAL_TENANTS: Tenant[] = [
 
 interface AppContextType {
   authRole: UserRole;
-  loginAs: (role: UserRole, pin: string) => boolean;
-  logout: () => void;
+  authSession: AuthSession | null;
+  loginAs: (role: UserRole, pin: string) => Promise<boolean>;
+  logout: () => Promise<void>;
+  checkServerSession: () => Promise<void>;
   theme: Theme;
   toggleTheme: () => void;
   language: Language;
@@ -98,8 +112,9 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 // Demo PIN credentials for RBAC
-export const ROLE_PINS = {
+export const ROLE_PINS: Record<string, string> = {
   cashier: '1234',
+  kitchen: '5555',
   admin: '8888',
 };
 
@@ -108,10 +123,15 @@ const DEFAULT_STORE_SETTINGS: StoreSettings = {
   logoUrl: '/icon.jpg',
   address: 'Jl. Raya No. 1, Jakarta',
   taxRate: 10,
+  serviceChargeRate: 5,
+  enableTax: true,
+  enableServiceCharge: true,
+  cashRoundingRule: 'NONE',
 };
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [authRole, setAuthRole] = useState<UserRole>('customer');
+  const [authSession, setAuthSession] = useState<AuthSession | null>(null);
   const [theme, setTheme] = useState<Theme>('light');
   const [language, setLanguageState] = useState<Language>('ID');
   const [selectedTable, setSelectedTable] = useState<string>('Meja 04');
@@ -139,6 +159,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [settingsLoading, setSettingsLoading] = useState(true);
   const [isDbConnected, setIsDbConnected] = useState(false);
 
+  // ── Server Session Synchronization ──────────────────────────────
+  const checkServerSession = useCallback(async () => {
+    try {
+      const res = await fetch('/api/auth/me');
+      if (res.ok) {
+        const json = await res.json();
+        if (json.session) {
+          setAuthSession(json.session);
+          setAuthRole(json.session.role);
+          localStorage.setItem('mycashier_auth_role', json.session.role);
+        }
+      }
+    } catch (_) {}
+  }, []);
+
   // ── Hydration & localStorage ─────────────────────────────────────
   useEffect(() => {
     setMounted(true);
@@ -150,7 +185,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (savedTheme) setTheme(savedTheme);
       if (savedLang) setLanguageState(savedLang);
     } catch (_) {}
-  }, []);
+    checkServerSession();
+  }, [checkServerSession]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -206,6 +242,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           ...DEFAULT_STORE_SETTINGS,
           ...json.data,
           taxRate: Number(json.data.taxRate ?? 10),
+          serviceChargeRate: Number(json.data.serviceChargeRate ?? 5),
+          enableTax: json.data.enableTax !== false && json.data.enableTax !== 'false',
+          enableServiceCharge: json.data.enableServiceCharge !== false && json.data.enableServiceCharge !== 'false',
+          cashRoundingRule: json.data.cashRoundingRule || 'NONE',
         });
       }
     } catch (_) {
@@ -260,24 +300,58 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
   }, [mounted, fetchMenu, fetchOrders, fetchStoreSettings]);
 
-  // ── Auth ─────────────────────────────────────────────────────────
-  const loginAs = (role: UserRole, pin: string): boolean => {
+  // ── Auth with Cookie Session Integration ─────────────────────────
+  const loginAs = async (role: UserRole, pin: string): Promise<boolean> => {
     if (role === 'customer') {
+      try {
+        await fetch('/api/auth/logout', { method: 'POST' });
+      } catch (_) {}
       setAuthRole('customer');
+      setAuthSession(null);
       localStorage.setItem('mycashier_auth_role', 'customer');
       return true;
     }
-    const validPin = ROLE_PINS[role as 'cashier' | 'admin'];
-    if (pin === validPin) {
-      setAuthRole(role);
-      localStorage.setItem('mycashier_auth_role', role);
-      return true;
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role, pin, branchId: activeBranch.id }),
+      });
+
+      if (res.ok) {
+        const json = await res.json();
+        if (json.session) {
+          setAuthRole(role);
+          setAuthSession(json.session);
+          localStorage.setItem('mycashier_auth_role', role);
+          return true;
+        }
+      }
+    } catch (_) {
+      // Local fallback for offline mode
+      const validPin = ROLE_PINS[role];
+      if (validPin && pin === validPin) {
+        setAuthRole(role);
+        setAuthSession({
+          userId: `usr-${role}-local`,
+          name: role === 'admin' ? 'Store Admin' : role === 'cashier' ? 'Kasir Utama' : 'Chef Dapur',
+          role,
+          branchId: activeBranch.id,
+        });
+        localStorage.setItem('mycashier_auth_role', role);
+        return true;
+      }
     }
     return false;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (_) {}
     setAuthRole('customer');
+    setAuthSession(null);
     localStorage.setItem('mycashier_auth_role', 'customer');
   };
 
@@ -422,8 +496,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }));
 
     const subtotal = cart.reduce((sum, c) => sum + c.item.price * c.quantity, 0);
-    const taxMultiplier = 1 + (storeSettings.taxRate || 10) / 100;
-    const totalAmount = Math.round(subtotal * taxMultiplier);
+    const totals = calculateOrderTotals(
+      subtotal,
+      0,
+      {
+        taxRate: storeSettings.taxRate,
+        serviceChargeRate: storeSettings.serviceChargeRate,
+        enableTax: storeSettings.enableTax,
+        enableServiceCharge: storeSettings.enableServiceCharge,
+        cashRoundingRule: storeSettings.cashRoundingRule,
+      },
+      paymentMethod === 'CASH'
+    );
+    const totalAmount = totals.finalTotal;
 
     const newOrder: Order = {
       id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -499,8 +584,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     <AppContext.Provider
       value={{
         authRole,
+        authSession,
         loginAs,
         logout,
+        checkServerSession,
         theme,
         toggleTheme,
         language,

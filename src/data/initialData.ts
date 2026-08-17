@@ -283,7 +283,9 @@ export interface InventoryItem {
   minThreshold: number;
   costPerUnit: number;
   lastRestocked: string;
+  branchId?: string;
 }
+
 
 export const INITIAL_INVENTORY: InventoryItem[] = [
   {
