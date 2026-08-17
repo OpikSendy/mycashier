@@ -1,9 +1,21 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Package, AlertTriangle, Plus, RefreshCw, Search, CheckCircle2, TrendingDown } from 'lucide-react';
+import {
+  X,
+  Package,
+  AlertTriangle,
+  Plus,
+  RefreshCw,
+  Search,
+  CheckCircle2,
+  TrendingDown,
+  ArrowRightLeft,
+  Building2,
+} from 'lucide-react';
 import { InventoryItem, INITIAL_INVENTORY } from '@/data/initialData';
 import { useApp } from '@/context/AppContext';
+import TransferHubModal from './TransferHubModal';
 
 interface Props {
   isOpen: boolean;
@@ -11,14 +23,16 @@ interface Props {
 }
 
 export default function InventoryManagerModal({ isOpen, onClose }: Props) {
-  const { language } = useApp();
+  const { language, activeBranch } = useApp();
   const isEn = language === 'EN';
 
+  const [selectedBranch, setSelectedBranch] = useState<string>(activeBranch?.id || 'b-1');
   const [items, setItems] = useState<InventoryItem[]>(INITIAL_INVENTORY);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [isTransferHubOpen, setIsTransferHubOpen] = useState(false);
 
   // New Item State
   const [newItem, setNewItem] = useState<Partial<InventoryItem>>({
@@ -34,7 +48,7 @@ export default function InventoryManagerModal({ isOpen, onClose }: Props) {
   const fetchInventory = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/inventory');
+      const res = await fetch(`/api/inventory?branchId=${selectedBranch}`);
       const json = await res.json();
       if (json.data && Array.isArray(json.data)) {
         setItems(json.data);
@@ -49,7 +63,7 @@ export default function InventoryManagerModal({ isOpen, onClose }: Props) {
     if (isOpen) {
       fetchInventory();
     }
-  }, [isOpen]);
+  }, [isOpen, selectedBranch]);
 
   const handleAdjustStock = async (id: string, delta: number) => {
     setItems((prev) =>
@@ -60,7 +74,7 @@ export default function InventoryManagerModal({ isOpen, onClose }: Props) {
       await fetch('/api/inventory', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, delta }),
+        body: JSON.stringify({ branchId: selectedBranch, id, itemId: id, delta }),
       });
     } catch (_) {}
   };
@@ -79,6 +93,7 @@ export default function InventoryManagerModal({ isOpen, onClose }: Props) {
       minThreshold: Number(newItem.minThreshold) || 1,
       costPerUnit: Number(newItem.costPerUnit) || 0,
       lastRestocked: new Date().toISOString().split('T')[0],
+      branchId: selectedBranch,
     };
 
     setItems((prev) => [itemToSave, ...prev]);
@@ -97,7 +112,7 @@ export default function InventoryManagerModal({ isOpen, onClose }: Props) {
       await fetch('/api/inventory', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(itemToSave),
+        body: JSON.stringify({ ...itemToSave, branchId: selectedBranch }),
       });
     } catch (_) {}
   };
@@ -115,8 +130,8 @@ export default function InventoryManagerModal({ isOpen, onClose }: Props) {
   const lowStockCount = items.filter((i) => i.stock <= i.minThreshold).length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden text-slate-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in text-slate-100">
+      <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
         
         {/* Header */}
         <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-900/80">
@@ -125,13 +140,18 @@ export default function InventoryManagerModal({ isOpen, onClose }: Props) {
               <Package className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-xl font-bold tracking-tight">
-                {isEn ? 'Raw Material & Inventory Stock' : 'Manajemen Stok & Bahan Baku'}
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-bold tracking-tight">
+                  {isEn ? 'Raw Material & Inventory Stock' : 'Manajemen Stok & Bahan Baku'}
+                </h2>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  Multi-Branch
+                </span>
+              </div>
               <p className="text-xs text-slate-400">
                 {isEn
-                  ? 'Real-time inventory tracking & auto-deduction alerts'
-                  : 'Pantau stok bahan baku, kemasan & alert pengingat otomatis'}
+                  ? 'Real-time multi-branch stock tracking & auto-deduction alerts'
+                  : 'Pantau stok bahan baku, kemasan & alert pengingat otomatis per cabang'}
               </p>
             </div>
           </div>
@@ -145,7 +165,7 @@ export default function InventoryManagerModal({ isOpen, onClose }: Props) {
             )}
             <button
               onClick={onClose}
-              className="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+              className="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -154,12 +174,26 @@ export default function InventoryManagerModal({ isOpen, onClose }: Props) {
 
         {/* Toolbar */}
         <div className="p-4 bg-slate-900/60 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2 flex-1 min-w-[240px]">
+          <div className="flex items-center gap-2 flex-1 min-w-[280px]">
+            {/* Branch Selector Dropdown */}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-xs">
+              <Building2 className="w-3.5 h-3.5 text-indigo-400" />
+              <select
+                value={selectedBranch}
+                onChange={(e) => setSelectedBranch(e.target.value)}
+                className="bg-transparent text-xs font-bold text-slate-100 focus:outline-none cursor-pointer"
+              >
+                <option value="b-1" className="bg-slate-900 text-white">🏢 Cabang Jakarta Pusat</option>
+                <option value="b-2" className="bg-slate-900 text-white">🏢 Cabang Bandung Dago</option>
+                <option value="b-3" className="bg-slate-900 text-white">🏢 Cabang Bali Seminyak</option>
+              </select>
+            </div>
+
             <div className="relative flex-1">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
-                placeholder={isEn ? 'Search raw material name...' : 'Cari nama bahan baku...'}
+                placeholder={isEn ? 'Search material name...' : 'Cari nama bahan baku...'}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-slate-800/80 border border-slate-700 focus:outline-none focus:border-amber-500 text-slate-100"
@@ -172,7 +206,7 @@ export default function InventoryManagerModal({ isOpen, onClose }: Props) {
               className="py-2 px-3 text-xs rounded-xl bg-slate-800 border border-slate-700 focus:outline-none focus:border-amber-500 text-slate-200"
             >
               <option value="all">{isEn ? 'All Categories' : 'Semua Kategori'}</option>
-              <option value="raw_material">{isEn ? 'Raw Materials' : 'Bahan Utam/Daging/Biji'}</option>
+              <option value="raw_material">{isEn ? 'Raw Materials' : 'Bahan Utama/Daging/Biji'}</option>
               <option value="beverage_base">{isEn ? 'Beverage Base/Dairy' : 'Base Minuman/Susu'}</option>
               <option value="packaging">{isEn ? 'Packaging' : 'Kemasan/Cup/Pouch'}</option>
             </select>
@@ -180,20 +214,28 @@ export default function InventoryManagerModal({ isOpen, onClose }: Props) {
 
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setIsTransferHubOpen(true)}
+              className="px-3.5 py-2 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white flex items-center gap-1.5 shadow-md shadow-indigo-600/20 transition-all cursor-pointer"
+            >
+              <ArrowRightLeft className="w-3.5 h-3.5" />
+              <span>{isEn ? 'Inter-Branch Transfer' : 'Transfer Antar Cabang'}</span>
+            </button>
+
+            <button
               onClick={fetchInventory}
               disabled={loading}
-              className="px-3 py-2 text-xs rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-1.5 transition-colors"
+              className="px-3 py-2 text-xs rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-              {isEn ? 'Refresh' : 'Muat Ulang'}
+              <span>{isEn ? 'Refresh' : 'Muat Ulang'}</span>
             </button>
 
             <button
               onClick={() => setShowAddForm(!showAddForm)}
-              className="px-4 py-2 text-xs font-medium rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 flex items-center gap-1.5 shadow-lg shadow-amber-500/20 transition-all"
+              className="px-4 py-2 text-xs font-medium rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 flex items-center gap-1.5 shadow-lg shadow-amber-500/20 transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              {isEn ? 'Add Material' : 'Tambah Bahan'}
+              <span>{isEn ? 'Add Material' : 'Tambah Bahan'}</span>
             </button>
           </div>
         </div>
@@ -262,13 +304,13 @@ export default function InventoryManagerModal({ isOpen, onClose }: Props) {
               <button
                 type="button"
                 onClick={() => setShowAddForm(false)}
-                className="px-3 py-1.5 text-xs rounded-lg bg-slate-800 text-slate-300"
+                className="px-3 py-1.5 text-xs rounded-lg bg-slate-800 text-slate-300 cursor-pointer"
               >
                 Batal
               </button>
               <button
                 type="submit"
-                className="px-4 py-1.5 text-xs font-semibold rounded-lg bg-amber-500 text-slate-950 hover:bg-amber-400"
+                className="px-4 py-1.5 text-xs font-semibold rounded-lg bg-amber-500 text-slate-950 hover:bg-amber-400 cursor-pointer"
               >
                 Simpan Bahan Baru
               </button>
@@ -284,7 +326,7 @@ export default function InventoryManagerModal({ isOpen, onClose }: Props) {
                 <tr className="bg-slate-800/80 text-[11px] font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-700">
                   <th className="py-3.5 px-4">{isEn ? 'Item Name' : 'Bahan Baku'}</th>
                   <th className="py-3.5 px-4">{isEn ? 'Category' : 'Kategori'}</th>
-                  <th className="py-3.5 px-4">{isEn ? 'Current Stock' : 'Stok Tersedia'}</th>
+                  <th className="py-3.5 px-4">{isEn ? 'Branch Stock' : 'Stok Cabang Ini'}</th>
                   <th className="py-3.5 px-4">{isEn ? 'Status' : 'Status Alert'}</th>
                   <th className="py-3.5 px-4 text-right">{isEn ? 'Adjust Stock' : 'Aksi Restok'}</th>
                 </tr>
@@ -334,19 +376,19 @@ export default function InventoryManagerModal({ isOpen, onClose }: Props) {
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => handleAdjustStock(item.id, -1)}
-                            className="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold flex items-center justify-center border border-slate-700 transition-colors"
+                            className="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold flex items-center justify-center border border-slate-700 transition-colors cursor-pointer"
                           >
                             -
                           </button>
                           <button
                             onClick={() => handleAdjustStock(item.id, 1)}
-                            className="w-7 h-7 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 font-bold flex items-center justify-center border border-amber-500/30 transition-colors"
+                            className="w-7 h-7 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 font-bold flex items-center justify-center border border-amber-500/30 transition-colors cursor-pointer"
                           >
                             +
                           </button>
                           <button
                             onClick={() => handleAdjustStock(item.id, 5)}
-                            className="px-2 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 text-[10px] font-semibold border border-emerald-500/30 transition-colors"
+                            className="px-2 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 text-[10px] font-semibold border border-emerald-500/30 transition-colors cursor-pointer"
                           >
                             +5 {item.unit}
                           </button>
@@ -363,17 +405,24 @@ export default function InventoryManagerModal({ isOpen, onClose }: Props) {
         {/* Footer */}
         <div className="p-4 border-t border-slate-800 bg-slate-900/90 flex justify-between items-center text-xs text-slate-400">
           <div>
-            Total Jenis Bahan: <span className="font-semibold text-slate-200">{items.length}</span>
+            Total Jenis Bahan: <span className="font-semibold text-slate-200">{items.length}</span> (Cabang: {selectedBranch})
           </div>
           <button
             onClick={onClose}
-            className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium transition-colors"
+            className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium transition-colors cursor-pointer"
           >
             {isEn ? 'Close' : 'Tutup'}
           </button>
         </div>
 
       </div>
+
+      {/* Embedded Inter-Branch Transfer Hub Modal */}
+      <TransferHubModal
+        isOpen={isTransferHubOpen}
+        onClose={() => setIsTransferHubOpen(false)}
+        onStockUpdated={fetchInventory}
+      />
     </div>
   );
 }
