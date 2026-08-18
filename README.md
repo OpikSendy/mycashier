@@ -7,11 +7,13 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![PWA Ready](https://img.shields.io/badge/PWA-Progressive_Web_App-10B981)](https://web.dev/progressive-web-apps/)
 [![OpenRouter AI](https://img.shields.io/badge/AI-OpenRouter_API-FF6B35)](https://openrouter.ai/)
+[![Scalar API Specs](https://img.shields.io/badge/API_Docs-Scalar-615EFF?logo=scalar)](https://mycashier-five.vercel.app/docs)
 [![Vercel](https://img.shields.io/badge/Deployed-Vercel-000000?logo=vercel)](https://mycashier-five.vercel.app)
 
 **MyCashier** adalah platform Aplikasi Kasir Online (Point of Sale / POS) dan Sistem Pemesanan Mandiri dari Meja (*Table QR Self-Ordering System*) terpadu berbasis Progressive Web Application (PWA) dengan perlindungan **RBAC (Role-Based Access Control)** dan integrasi data real-time antar seluruh modul: PWA Pelanggan, Kasir POS, Dapur KDS, dan Admin CMS.
 
-🔗 **Live Demo**: [mycashier-five.vercel.app](https://mycashier-five.vercel.app)
+🔗 **Live Demo**: [mycashier-five.vercel.app](https://mycashier-five.vercel.app)  
+📖 **Interactive Scalar API Docs**: [mycashier-five.vercel.app/docs](https://mycashier-five.vercel.app/docs)  
 
 ---
 

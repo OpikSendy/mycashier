@@ -2,6 +2,8 @@
 
 Seluruh API route berjalan di Next.js 16 App Router (`src/app/api/`) dengan type safety penuh dan dukungan PostgreSQL / Fallback in-memory.
 
+> 📖 **Interactive Scalar API Documentation**: Akses dokumentasi API interaktif berbasis OpenAPI 3.1 & Scalar di rute `/docs` (misal: `http://localhost:3000/docs` atau `https://mycashier-five.vercel.app/docs`). Spesifikasi OpenAPI dapat diunduh di `/api/openapi.json`.
+
 ---
 
 ## 📋 API Endpoints Index (17 Endpoints)
